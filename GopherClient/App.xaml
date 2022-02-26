@@ -1,0 +1,10 @@
+﻿<Application x:Class="GopherClient.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:GopherClient"
+             xmlns:view="clr-namespace:GopherClient.View"
+             StartupUri="/View/Main.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>
