@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "/dKuMOJpiMXAuGODVkiDRrxG8RermI3lCgVUs0Dn/I7VUinX6RRG5FGZU8JqZupnJCSqkEeMaYyLrA+l1LtyzQ==",
+  "dgSpecHash": "roYPBPa6TEgKhrJjYzLDEi3RPbwPtTuEgCRsdGto3Y7oGH+LjLpQ/XKjdUX3GTYP2uf5RxUljCSJpuFS8x7u/g==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Eric\\source\\repos\\GopherClient\\GopherClient\\GopherClient.csproj",
+  "projectFilePath": "C:\\Users\\Eric\\projects\\gophr\\GopherClient\\GopherClient.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

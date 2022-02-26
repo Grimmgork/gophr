@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Eric\\source\\repos\\GopherClient\\GopherClient\\GopherClient.csproj": {}
+    "C:\\Users\\Eric\\projects\\gophr\\GopherClient\\GopherClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Eric\\source\\repos\\GopherClient\\GopherClient\\GopherClient.csproj": {
+    "C:\\Users\\Eric\\projects\\gophr\\GopherClient\\GopherClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Eric\\source\\repos\\GopherClient\\GopherClient\\GopherClient.csproj",
+        "projectUniqueName": "C:\\Users\\Eric\\projects\\gophr\\GopherClient\\GopherClient.csproj",
         "projectName": "GopherClient",
-        "projectPath": "C:\\Users\\Eric\\source\\repos\\GopherClient\\GopherClient\\GopherClient.csproj",
+        "projectPath": "C:\\Users\\Eric\\projects\\gophr\\GopherClient\\GopherClient.csproj",
         "packagesPath": "C:\\Users\\Eric\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Eric\\source\\repos\\GopherClient\\GopherClient\\obj\\",
+        "outputPath": "C:\\Users\\Eric\\projects\\gophr\\GopherClient\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",

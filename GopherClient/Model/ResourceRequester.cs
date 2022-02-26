@@ -6,8 +6,14 @@ namespace GopherClient.Model
 {
 	public static class ResourceRequester
 	{
-		private static Dictionary<string, IScheme> map = new Dictionary<string, IScheme>();
+		private static Dictionary<string, IScheme> map;
 		
+		public static void Init(){
+			map = new Dictionary<string, IScheme>();
+			Map("gopher", new GopherProtocol());
+			Map("file", new FileProtocol());
+		}
+
 		public static void Map(string protocolname, IScheme scheme){
 			map.Add(protocolname, scheme);
 		}

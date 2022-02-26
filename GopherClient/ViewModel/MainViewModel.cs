@@ -17,6 +17,22 @@ namespace GopherClient.ViewModel
 {
 	public class MainViewModel : OnPropertyChangedBase
 	{
+		public ICommand BackCommand{
+			get{
+				return new RelayCommand(o => { Navigate(History.Previous()); }, o => History.HasPrevious);
+			}
+		}
+
+		public ICommand ForwardCommand
+		{
+			get
+			{
+				return new RelayCommand(o => { Navigate(History.Next()); }, o => History.HasNext);
+			}
+		}
+
+		private HistoryStack<string> History;
+
 		private string _location;
 		public string Location{
 			get{
@@ -27,6 +43,8 @@ namespace GopherClient.ViewModel
 					_location = value;
 					OnPropertyChanged("Location");
 					Navigate(Location);
+					if(History.Value != Location)
+						History.Push(Location);
 				}
 			}
 		}
@@ -54,8 +72,8 @@ namespace GopherClient.ViewModel
 		}
 
 		public MainViewModel(){
-			ResourceRequester.Map("gopher", new GopherProtocol());
-			ResourceRequester.Map("file", new FileProtocol());
+			ResourceRequester.Init();
+			History = new HistoryStack<string>(100);
 
 			Location = "file:///c:/users/eric/desktop/floodgap.txt";
 		}

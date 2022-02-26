@@ -20,13 +20,13 @@
 		</Grid.RowDefinitions>
 
 		<ToolBar Grid.Row="1">
-			<Button Content="Back"/>
-			<Button Content="Forward"/>
+			<Button Content="Back" Command="{Binding BackCommand}"/>
+			<Button Content="Forward" Command="{Binding ForwardCommand}" />
 		</ToolBar>
 
 		<StatusBar   Grid.Row="3" Background="Gray">
 			<StatusBarItem>
-				<TextBlock Text="{Binding Status}"/>
+				<TextBlock Text="{Binding Status}" FontSize="12" FontWeight="Bold"/>
 			</StatusBarItem>
 		</StatusBar>
 		<TextBox Text="{Binding Location}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalAlignment="Top"/>

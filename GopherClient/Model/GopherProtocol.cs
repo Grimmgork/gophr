@@ -15,7 +15,7 @@ namespace GopherClient.Model
 			NetworkStream stream = tcp.GetStream();
 
 			stream.Write(Encoding.ASCII.GetBytes(url.PathAndQuery + "\n"));
-			const int buffersize = 10000;
+			const int buffersize = 640000;
 			byte[] data = new byte[buffersize];
 			int index = 0;
 

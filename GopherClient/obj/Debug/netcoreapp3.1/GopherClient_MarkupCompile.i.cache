@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\Eric\source\repos\GopherClient\GopherClient\obj\Debug\netcoreapp3.1\
+C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\
 GopherClient
 none
 false
 TRACE;DEBUG;NETCOREAPP;NETCOREAPP3_1;
-C:\Users\Eric\source\repos\GopherClient\GopherClient\App.xaml
+C:\Users\Eric\projects\gophr\GopherClient\App.xaml
 1-590739180
 
-12718179081
+13-451000603
 1921654412462
 View\Main.xaml;
 
-False
+True
 
