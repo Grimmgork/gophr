@@ -5,33 +5,40 @@ using System.Windows.Documents;
 using System.IO;
 using System.Windows;
 using System.Linq;
-
-using GopherClient.Model;
 using System.Windows.Navigation;
 using System.Windows.Input;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Windows.Threading;
 
+using GopherClient.Model;
+using GopherClient.Commands;
+using GopherClient.ViewModel.ResourceTypes;
+
+
+
 namespace GopherClient.ViewModel
 {
 	public class MainViewModel : OnPropertyChangedBase
 	{
+		private static MainViewModel mvm;
+
 		public ICommand BackCommand{
 			get{
-				return new RelayCommand(o => { Navigate(History.Previous()); }, o => History.HasPrevious);
+				return new RelayCommand(o => { Navigate(History.Previous(), null); }, o => History.HasPrevious);
 			}
 		}
-
 		public ICommand ForwardCommand
 		{
 			get
 			{
-				return new RelayCommand(o => { Navigate(History.Next()); }, o => History.HasNext);
+				return new RelayCommand(o => { Navigate(History.Next(), null); }, o => History.HasNext);
 			}
 		}
 
 		private HistoryStack<string> History;
+
+		public static string Kek = "lel";
 
 		private string _location;
 		public string Location{
@@ -42,10 +49,21 @@ namespace GopherClient.ViewModel
 				if(value != _location){
 					_location = value;
 					OnPropertyChanged("Location");
-					Navigate(Location);
+					Navigate(Location, null);
 					if(History.Value != Location)
 						History.Push(Location);
 				}
+			}
+		}
+
+		private string _info;
+		public string Info{
+			get{
+				return _info;
+			}
+			set{
+				_info = value;
+				OnPropertyChanged("Info");
 			}
 		}
 
@@ -60,6 +78,18 @@ namespace GopherClient.ViewModel
 			}
 		}
 
+		private ResourceTypeBase _result;
+		public ResourceTypeBase Result{
+			get{
+				return _result;
+			}
+			set{
+				_result = value;
+				OnPropertyChanged("Result");
+			}
+		}
+
+
 		private FlowDocument _doc;
 		public FlowDocument Doc{
 			get{
@@ -72,75 +102,53 @@ namespace GopherClient.ViewModel
 		}
 
 		public MainViewModel(){
-			ResourceRequester.Init();
-			History = new HistoryStack<string>(100);
+			MainViewModel.mvm = this;
 
-			Location = "file:///c:/users/eric/desktop/floodgap.txt";
+			ResourceFetcher.Init();
+			History = new HistoryStack<string>(100);
+			Location = "gopher://gopher.floodgap.com";
 		}
 
-		public async void Navigate(string url)
+		public async void Navigate(string url, string type)
 		{
-			Doc = null;
+			Result = null;
 			Location = url;
 			Status = "fetching ...";
-
-			try{
-				byte[] data = await Task.Run(() => {
-					return ResourceRequester.GetResource(new Uri(url));
+			Trace.WriteLine(type);
+			try
+			{
+				Resource request = await Task.Run(() => {
+					return ResourceFetcher.Request(url);
 				});
+
+				if (type == null)
+					type = request.Type;
+
 				Status = "Parsing ...";
-				Doc = GenerateGopherDocument(data);
+				switch(type){
+					case "gopher":
+						Result = new GopherResource(request.Data);
+						break;
+					case "image":
+						Result = new TextResource(request.Data);
+						break;
+					default:
+						Result = new TextResource(request.Data);
+						break;
+				}
+
 				Status = "Done!";
+				Trace.WriteLine("Success!");
 			}
 			catch{
+				Trace.WriteLine("Error!");
 				Doc = GenerateErrorPage(1);
 				Status = "Error!";
 			}
 		}
 
-		public FlowDocument GenerateGopherDocument(byte[] data)
-		{
-			string text = Encoding.ASCII.GetString(data);
-			string[] lines = text.Split("\n");
-
-			FlowDocument doc = new FlowDocument();
-			doc.PageWidth = 2500;
-			doc.FontFamily = new System.Windows.Media.FontFamily("Consolas");
-			Paragraph p = new Paragraph();
-
-			for (int i = 0; i < lines.Length; i++)
-			{
-				string line = lines[i];
-				if(line == String.Empty){
-					continue;
-				}
-
-				string[] splitbytabs = line.Split("\t");
-				string rline = splitbytabs[0].Substring(1);
-
-				string path = splitbytabs[1];
-				string host = splitbytabs[2];
-				int port = int.Parse(splitbytabs[3]);
-
-				char type = line[0];
-				switch (type)
-				{
-					case '1':
-						Hyperlink link = new Hyperlink(new Run(rline));
-						string newurl = $"gopher://{host}:{port}{path}";
-						link.Command = new RelayCommand(o => { Location = newurl; }, o => true);
-						p.Inlines.Add(link);
-						break;
-					default:
-						p.Inlines.Add(new Run(rline));
-						break;
-				}
-				if (i < lines.Length)
-					p.Inlines.Add(new LineBreak());
-			}
-
-			doc.Blocks.Add(p);
-			return doc;
+		public static ICommand NavigateToUrlBehavior(string url, string type){
+			return new RelayCommand(o => { mvm.Navigate(url, type); }, o => true);
 		}
 
 		public FlowDocument GenerateErrorPage(int errorcode){
@@ -149,34 +157,6 @@ namespace GopherClient.ViewModel
 			p.Inlines.Add(new Run("Error!"));
 			doc.Blocks.Add(p);
 			return doc;
-		}
-
-		public class RelayCommand : ICommand
-		{
-			private Action<object> execute;
-			private Func<object, bool> canExecute;
-
-			public event EventHandler CanExecuteChanged
-			{
-				add { CommandManager.RequerySuggested += value; }
-				remove { CommandManager.RequerySuggested -= value; }
-			}
-
-			public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
-			{
-				this.execute = execute;
-				this.canExecute = canExecute;
-			}
-
-			public bool CanExecute(object parameter)
-			{
-				return this.canExecute == null || this.canExecute(parameter);
-			}
-
-			public void Execute(object parameter)
-			{
-				this.execute(parameter);
-			}
 		}
 	}
 }

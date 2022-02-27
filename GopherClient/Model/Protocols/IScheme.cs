@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GopherClient.Model
+namespace GopherClient.Model.Protocols
 {
 	public interface IScheme
 	{
-		public byte[] GetResource(Uri url);
+		public Resource GetResource(Uri url);
 	}
 }

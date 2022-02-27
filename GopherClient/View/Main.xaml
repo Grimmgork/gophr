@@ -5,34 +5,59 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GopherClient.View"
         xmlns:vm="clr-namespace:GopherClient.ViewModel"
+		xmlns:rv="clr-namespace:GopherClient.View.ResourceViews"
+		xmlns:vmrt="clr-namespace:GopherClient.ViewModel.ResourceTypes"
         mc:Ignorable="d"
         Title="gopherspace" Height="450" Width="800" Background="Black"
 		>
 	<Window.DataContext>
 		<vm:MainViewModel/>
 	</Window.DataContext>
+
+	<Window.Resources>
+		<DataTemplate DataType="{x:Type vmrt:GopherResource}">
+			<rv:GopherView/>
+		</DataTemplate>
+		<DataTemplate DataType="{x:Type vmrt:TextResource}">
+			<rv:TextView/>
+		</DataTemplate>
+	</Window.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition/>
-			<RowDefinition Height="25"/>
+			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<ToolBar Grid.Row="1">
-			<Button Content="Back" Command="{Binding BackCommand}"/>
-			<Button Content="Forward" Command="{Binding ForwardCommand}" />
-		</ToolBar>
+		<Border Grid.Row="1"  Background="WhiteSmoke"/>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="20"/>
+				<ColumnDefinition Width="20"/>
+				<ColumnDefinition/>
+			</Grid.ColumnDefinitions>
 
-		<StatusBar   Grid.Row="3" Background="Gray">
+			<TextBox Grid.Column="3" Text="{Binding Location}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalAlignment="Stretch"/>
+
+			<Button Content="Back" Command="{Binding BackCommand}" />
+			<Button Content="Forw" Command="{Binding ForwardCommand}" Grid.Column="1"/>
+		</Grid>
+
+		<StatusBar Grid.Row="3" Background="WhiteSmoke">
 			<StatusBarItem>
-				<TextBlock Text="{Binding Status}" FontSize="12" FontWeight="Bold"/>
+				<Image Height="20" Width="20" Stretch="Fill" Source="/Resources/Icons/skull-fill.png"/>
+			</StatusBarItem>
+			<Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
+			<StatusBarItem>
+				<TextBlock Text="{Binding Status}" FontSize="12" Foreground="Gray"/>
+			</StatusBarItem>
+			<Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
+			<StatusBarItem>
+				<TextBlock Text="{Binding Info}" FontSize="12" Foreground="Gray"/>
 			</StatusBarItem>
 		</StatusBar>
-		<TextBox Text="{Binding Location}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalAlignment="Top"/>
 
-		<FlowDocumentScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible" Document="{Binding Doc}" Foreground="White" FontFamily="Consolas" >
-			
-		</FlowDocumentScrollViewer>
+		<ContentPresenter Grid.Row="2" Content="{Binding Result}"/>
 	</Grid>
 </Window>

@@ -7,7 +7,27 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="View\ResourceViews\GopherView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="View\ResourceViews\ImageView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="View\ResourceViews\TextView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="View\Main.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="View\ResourceViews\GopherView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="View\ResourceViews\ImageView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="View\ResourceViews\TextView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

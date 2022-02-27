@@ -60,5 +60,15 @@ namespace GopherClient.Model
 			current = current.Next;
 			return current.Value;
 		}
+
+		public T[] GetHistory(){
+			IEnumerator<T> enumerator = stack.GetEnumerator();
+			int i = 0;
+			T[] result = new T[stack.Count];
+			while(enumerator.MoveNext()){
+				result[i] = enumerator.Current;
+			}
+			return result;
+		}
 	}
 }

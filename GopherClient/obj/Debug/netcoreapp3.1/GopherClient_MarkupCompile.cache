@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NETCOREAPP;NETCOREAPP3_1;
 C:\Users\Eric\projects\gophr\GopherClient\App.xaml
-1-590739180
+4484544258
 
-11389048477
+18258978774
 1921654412462
-View\Main.xaml;
+View\Main.xaml;View\ResourceViews\GopherView.xaml;View\ResourceViews\ImageView.xaml;View\ResourceViews\TextView.xaml;
 
 False
 
