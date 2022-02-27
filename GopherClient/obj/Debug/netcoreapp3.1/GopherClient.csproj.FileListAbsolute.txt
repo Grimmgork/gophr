@@ -44,3 +44,4 @@ C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceV
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\GopherView.baml
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\ImageView.baml
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\TextView.baml
+C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.csprojAssemblyReference.cache

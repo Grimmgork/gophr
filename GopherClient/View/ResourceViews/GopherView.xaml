@@ -9,12 +9,6 @@
       Background="Black">
 
 	<FlowDocumentScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible" Document="{Binding Doc}" Foreground="White" FontFamily="Consolas" >
-		<FlowDocumentScrollViewer.Resources>
-			<Style TargetType="Hyperlink">
-				<Setter Property="ToolTip.IsEnabled" Value="True"/>
-				<Setter Property="ToolTip.AllowDrop" Value="True"/>
-				<Setter Property="ToolTip" Value="{Binding Path=Url}"/>
-			</Style>
-        </FlowDocumentScrollViewer.Resources>
+
 	</FlowDocumentScrollViewer>
 </UserControl>

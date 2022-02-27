@@ -9,7 +9,7 @@ namespace GopherClient.Model.Protocols
 {
 	public class GopherProtocol : IScheme
 	{	
-		public Resource GetResource(Uri url)
+		public Resource GetResource(Uri url, CancellationToken token)
 		{
 			TcpClient tcp = new TcpClient(url.Host, url.Port);
 			NetworkStream stream = tcp.GetStream();
@@ -20,6 +20,9 @@ namespace GopherClient.Model.Protocols
 			int index = 0;
 
 			while(true){
+				if(token.IsCancellationRequested){
+					throw new OperationCanceledException();
+				}
 				data[index] = (byte) stream.ReadByte();
 				index++;
 				if (index > 5)
@@ -32,10 +35,15 @@ namespace GopherClient.Model.Protocols
 			byte[] finalData = new byte[finallength];
 			Array.Copy(data, finalData, finallength);
 			string type = null;
+
 			if (url.AbsolutePath == "/" || url.AbsolutePath == ""){
 				type = "gopher";
 			}
 
+			if (!url.Segments[url.Segments.Length-1].Contains(".")){
+				type = "gopher";
+			}
+			
 			return new Resource(finalData, type, url);
 		}
 	}

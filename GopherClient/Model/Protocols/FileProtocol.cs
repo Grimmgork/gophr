@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using System.Threading;
 
 namespace GopherClient.Model.Protocols
 {
 	public class FileProtocol : IScheme
 	{
 		public Dictionary<string, string> types;
-		
-		public Resource GetResource(Uri url)
+
+		public Resource GetResource(Uri url, CancellationToken token)
 		{
 			byte[] data = File.ReadAllBytes(url.LocalPath);
 			string[] splitbydots = url.LocalPath.Split('.');

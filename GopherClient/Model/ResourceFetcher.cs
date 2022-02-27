@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+using System.Threading;
 using GopherClient.Model.Protocols;
 
 namespace GopherClient.Model
@@ -20,10 +20,10 @@ namespace GopherClient.Model
 			map.Add(protocolname, scheme);
 		}
 
-		public static Resource Request(string url)
+		public static Resource Request(string url, CancellationToken token)
 		{
 			Uri uri = new Uri(url);
-			return map[uri.Scheme].GetResource(uri);
+			return map[uri.Scheme].GetResource(uri, token);
 		}
 	}
 

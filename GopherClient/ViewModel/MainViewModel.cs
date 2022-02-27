@@ -14,14 +14,15 @@ using System.Windows.Threading;
 using GopherClient.Model;
 using GopherClient.Commands;
 using GopherClient.ViewModel.ResourceTypes;
-
-
+using System.Threading;
 
 namespace GopherClient.ViewModel
 {
 	public class MainViewModel : OnPropertyChangedBase
 	{
 		private static MainViewModel mvm;
+		private static CancellationTokenSource cancelTokenSource;
+		private static Task<Resource> task;
 
 		public ICommand BackCommand{
 			get{
@@ -38,20 +39,16 @@ namespace GopherClient.ViewModel
 
 		private HistoryStack<string> History;
 
-		public static string Kek = "lel";
-
 		private string _location;
 		public string Location{
 			get{
 				return _location;
 			}
 			set{
-				if(value != _location){
+				if(Location != value){
 					_location = value;
 					OnPropertyChanged("Location");
 					Navigate(Location, null);
-					if(History.Value != Location)
-						History.Push(Location);
 				}
 			}
 		}
@@ -107,20 +104,35 @@ namespace GopherClient.ViewModel
 			ResourceFetcher.Init();
 			History = new HistoryStack<string>(100);
 			Location = "gopher://gopher.floodgap.com";
+
+			Navigate("gopher://gopher.floodgap.com", null);
+			Navigate("gopher://gopher.floodgap.com", null);
+			Navigate("gopher://gopher.floodgap.com", null);
 		}
 
 		public async void Navigate(string url, string type)
 		{
 			Result = null;
-			Location = url;
 			Status = "fetching ...";
-			Trace.WriteLine(type);
+
+			_location = url;
+			OnPropertyChanged("Location");
+			if(History.Value != url)
+				History.Push(url);
+
+			if(task != null)
+			if(task.Status == TaskStatus.Running){
+				cancelTokenSource.Cancel();
+			}
+
+			cancelTokenSource = new CancellationTokenSource();
+			CancellationToken t = cancelTokenSource.Token;
+			task = Task.Factory.StartNew(() => {  return ResourceFetcher.Request(url, t); }, t);
+			Trace.WriteLine("Start task!");
 			try
 			{
-				Resource request = await Task.Run(() => {
-					return ResourceFetcher.Request(url);
-				});
-
+				await task;
+				Resource request = task.Result;
 				if (type == null)
 					type = request.Type;
 
@@ -151,7 +163,7 @@ namespace GopherClient.ViewModel
 			return new RelayCommand(o => { mvm.Navigate(url, type); }, o => true);
 		}
 
-		public FlowDocument GenerateErrorPage(int errorcode){
+		private FlowDocument GenerateErrorPage(int errorcode){
 			FlowDocument doc = new FlowDocument();
 			Paragraph p = new Paragraph();
 			p.Inlines.Add(new Run("Error!"));

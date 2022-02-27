@@ -25,7 +25,6 @@ namespace GopherClient.ViewModel.ResourceTypes
 		public GopherResource(byte[] data)
 		{
 			Doc = GenerateGopherDocument(data);
-			Trace.WriteLine("Gopher view Ready!");
 		}
 
 		public static FlowDocument GenerateGopherDocument(byte[] data)
