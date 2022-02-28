@@ -14,50 +14,85 @@
 		<vm:MainViewModel/>
 	</Window.DataContext>
 
-	<Window.Resources>
-		<DataTemplate DataType="{x:Type vmrt:GopherResource}">
-			<rv:GopherView/>
-		</DataTemplate>
-		<DataTemplate DataType="{x:Type vmrt:TextResource}">
-			<rv:TextView/>
-		</DataTemplate>
-	</Window.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="25"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition/>
-			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="25"/>
 		</Grid.RowDefinitions>
 
 		<Border Grid.Row="1"  Background="WhiteSmoke"/>
 		<Grid>
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="20"/>
-				<ColumnDefinition Width="20"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition/>
 			</Grid.ColumnDefinitions>
 
-			<TextBox Grid.Column="3" Text="{Binding Location}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalAlignment="Stretch"/>
+			<TextBox Grid.Column="4" Text="{Binding Location}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
 
-			<Button Content="Back" Command="{Binding BackCommand}" />
-			<Button Content="Forw" Command="{Binding ForwardCommand}" Grid.Column="1"/>
+			<Button Width="25" FontSize="20" Content="&#xea64;" Command="{Binding BackCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0"/>
+			<Button Width="25" FontSize="20"  Content="&#xea6e;" Command="{Binding ForwardCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0" Grid.Column="1"/>
+			<Button Width="25" FontSize="16"  Content="&#xf074;" Command="{Binding RefreshCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0" Grid.Column="2"/>
 		</Grid>
 
 		<StatusBar Grid.Row="3" Background="WhiteSmoke">
-			<StatusBarItem>
-				<Image Height="20" Width="20" Stretch="Fill" Source="/Resources/Icons/skull-fill.png"/>
+			<Separator Background="LightGray"/>
+			<StatusBarItem FontFamily="{StaticResource SymbolFont}" FontSize="17" Width="25" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
+				<StatusBarItem.Style>
+					<Style TargetType="StatusBarItem">
+						<Style.Triggers>
+							<DataTrigger Binding="{Binding Status}" Value="done">
+								<Setter Property="Content" Value="&#xeb7b;"/>
+							</DataTrigger>
+							<DataTrigger Binding="{Binding Status}" Value="fetching">
+								<Setter Property="Content" Value="&#xef78;"/>
+							</DataTrigger>
+							<DataTrigger Binding="{Binding Status}" Value="parsing">
+								<Setter Property="Content" Value="&#xed0f;"/>
+							</DataTrigger>
+							<DataTrigger Binding="{Binding Status}" Value="error">
+								<Setter Property="Content" Value="&#xf149;"/>
+							</DataTrigger>
+						</Style.Triggers>
+					</Style>
+				</StatusBarItem.Style>
 			</StatusBarItem>
 			<Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
-			<StatusBarItem>
-				<TextBlock Text="{Binding Status}" FontSize="12" Foreground="Gray"/>
+			<StatusBarItem FontSize="14">
+				<StatusBarItem.Style>
+					<Style TargetType="StatusBarItem">
+						<Style.Triggers>
+							<DataTrigger Binding="{Binding Status}" Value="done">
+								<Setter Property="Content" Value="Done!"/>
+							</DataTrigger>
+							<DataTrigger Binding="{Binding Status}" Value="fetching">
+								<Setter Property="Content" Value="Fetching ..."/>
+							</DataTrigger>
+							<DataTrigger Binding="{Binding Status}" Value="parsing">
+								<Setter Property="Content" Value="Parsing ..."/>
+							</DataTrigger>
+							<DataTrigger Binding="{Binding Status}" Value="error">
+								<Setter Property="Content" Value="Error!"/>
+							</DataTrigger>
+						</Style.Triggers>
+					</Style>
+				</StatusBarItem.Style>
 			</StatusBarItem>
-			<Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
-			<StatusBarItem>
-				<TextBlock Text="{Binding Info}" FontSize="12" Foreground="Gray"/>
-			</StatusBarItem>
+			<StatusBarItem Content="{Binding Info}"/>
 		</StatusBar>
 
-		<ContentPresenter Grid.Row="2" Content="{Binding Result}"/>
+		<ContentPresenter Grid.Row="2" Content="{Binding Result}">
+			<ContentPresenter.Resources>
+				<DataTemplate DataType="{x:Type vmrt:GopherResource}">
+					<rv:GopherView/>
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type vmrt:TextResource}">
+					<rv:TextView/>
+				</DataTemplate>
+			</ContentPresenter.Resources>
+		</ContentPresenter>
 	</Grid>
 </Window>

@@ -37,11 +37,11 @@ C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.c
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.dll
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.pdb
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.genruntimeconfig.cache
-C:\Users\Eric\projects\gophr\GopherClient\bin\Debug\netcoreapp3.1\Resources\Icons\skull-fill.png
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\GopherView.g.cs
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\ImageView.g.cs
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\TextView.g.cs
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\GopherView.baml
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\ImageView.baml
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\TextView.baml
-C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.csprojAssemblyReference.cache
+C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\Theme.baml
+C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\App.baml

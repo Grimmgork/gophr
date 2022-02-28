@@ -15,7 +15,7 @@ namespace GopherClient.Model.Protocols
 			NetworkStream stream = tcp.GetStream();
 
 			stream.Write(Encoding.ASCII.GetBytes(url.PathAndQuery + "\n"));
-			const int buffersize = 64000;
+			const int buffersize = 6400000;
 			byte[] data = new byte[buffersize];
 			int index = 0;
 
@@ -29,6 +29,10 @@ namespace GopherClient.Model.Protocols
 				if(Encoding.ASCII.GetString(data, index-5, 5) == "\r\n.\r\n"){
 					break;
 				}
+			}
+
+			if (token.IsCancellationRequested){
+				throw new OperationCanceledException();
 			}
 
 			int finallength = index + 1 - 5;

@@ -1,0 +1,13 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+	<SolidColorBrush x:Key="PrimaryColor"  Color="#FF004BFF"/>
+
+	<FontFamily x:Key="SymbolFont" >
+		./Resources/Fonts/#remixicon
+	</FontFamily>
+
+	<FontFamily x:Key="TextFont">
+		Segoe UI
+	</FontFamily>
+</ResourceDictionary>
