@@ -7,5 +7,6 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800" 
       Background="Black">
-	<TextBox IsReadOnly="True" Text="{Binding Text}" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" BorderThickness="0" Background="LightGray" Foreground="Black" FontWeight="SemiBold"/>
+	<!--<TextBox IsReadOnly="True" VirtualizingPanel.IsVirtualizing="True" Text="{Binding Text, Mode=OneWay}" VerticalScrollBarVisibility="Visible" FontFamily="Consolas" BorderThickness="0" Background="Black" Foreground="LightGray" FontWeight="SemiBold"/>-->
+	<FlowDocumentScrollViewer Foreground="White" Document="{Binding Doc}"/>
 </UserControl>

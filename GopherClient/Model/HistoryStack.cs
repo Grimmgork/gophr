@@ -17,6 +17,12 @@ namespace GopherClient.Model
 					return default(T);
 				return current.Value;
 			}
+            set
+            {
+				if (stack.Count == 0)
+					return;
+				current.Value = value;
+            }
 		}
 
 		public bool HasPrevious{
@@ -70,5 +76,15 @@ namespace GopherClient.Model
 			}
 			return result;
 		}
-	}
+
+        public override string ToString()
+        {
+			string result = "";
+			foreach(T v in GetHistory())
+            {
+				result += v.ToString() + "\n";
+            }
+			return result;
+        }
+    }
 }

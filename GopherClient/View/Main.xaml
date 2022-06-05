@@ -31,7 +31,7 @@
 				<ColumnDefinition/>
 			</Grid.ColumnDefinitions>
 
-			<TextBox Grid.Column="4" Text="{Binding Location}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
+			<TextBox Grid.Column="4" Text="{Binding Url, Mode=TwoWay}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
 
 			<Button Width="25" FontSize="20" Content="&#xea64;" Command="{Binding BackCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0"/>
 			<Button Width="25" FontSize="20"  Content="&#xea6e;" Command="{Binding ForwardCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0" Grid.Column="1"/>
@@ -66,22 +66,23 @@
 					<Style TargetType="StatusBarItem">
 						<Style.Triggers>
 							<DataTrigger Binding="{Binding Status}" Value="done">
-								<Setter Property="Content" Value="Done!"/>
+								<Setter Property="Content" Value="done!"/>
 							</DataTrigger>
 							<DataTrigger Binding="{Binding Status}" Value="fetching">
-								<Setter Property="Content" Value="Fetching ..."/>
+								<Setter Property="Content" Value="fetching"/>
 							</DataTrigger>
 							<DataTrigger Binding="{Binding Status}" Value="parsing">
-								<Setter Property="Content" Value="Parsing ..."/>
+								<Setter Property="Content" Value="parsing"/>
 							</DataTrigger>
 							<DataTrigger Binding="{Binding Status}" Value="error">
-								<Setter Property="Content" Value="Error!"/>
+								<Setter Property="Content" Value="error!"/>
 							</DataTrigger>
 						</Style.Triggers>
 					</Style>
 				</StatusBarItem.Style>
 			</StatusBarItem>
 			<StatusBarItem Content="{Binding Info}"/>
+			<StatusBarItem Content="{Binding DataSize}" HorizontalAlignment="Right"/>
 		</StatusBar>
 
 		<ContentPresenter Grid.Row="2" Content="{Binding Result}">
@@ -91,6 +92,9 @@
 				</DataTemplate>
 				<DataTemplate DataType="{x:Type vmrt:TextResource}">
 					<rv:TextView/>
+				</DataTemplate>
+				<DataTemplate DataType="{x:Type vmrt:ErrorResource}">
+					<rv:ErrorView/>
 				</DataTemplate>
 			</ContentPresenter.Resources>
 		</ContentPresenter>

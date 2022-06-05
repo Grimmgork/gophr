@@ -7,20 +7,13 @@ using System.Threading;
 
 namespace GopherClient.Model.Protocols
 {
-	public class FileProtocol : IScheme
+	public class FileProtocol : ResourceRequest
 	{
-		public Dictionary<string, string> types;
-
-		public Resource GetResource(Uri url, CancellationToken token)
+		internal override void MakeRequest()
 		{
-			byte[] data = File.ReadAllBytes(url.LocalPath);
-			string[] splitbydots = url.LocalPath.Split('.');
-			string extension = splitbydots[splitbydots.Length - 1];
-			string type = null;
-			if (types.ContainsKey(extension))
-				type = types[extension];
-			
-			return new Resource(data, type, url);
+			base.MakeRequest();
+			byte[] data = File.ReadAllBytes(Url.LocalPath);
+			string type = FileExtension.GetType(Path.GetExtension(Url.LocalPath));
 		}
 	}
 }

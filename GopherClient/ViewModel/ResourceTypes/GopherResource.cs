@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
+using System.Linq;
 
 namespace GopherClient.ViewModel.ResourceTypes
 {
 	public class GopherResource : ResourceTypeBase
 	{
-		FlowDocument _doc;
+		private string unprocessedData = "";
+
+		FlowDocument _doc = new FlowDocument() { PageWidth = 10000, FontFamily = new System.Windows.Media.FontFamily("Consolas"), Foreground = Brushes.WhiteSmoke, LineHeight = 1, PagePadding = new System.Windows.Thickness(10d) };
 		public FlowDocument Doc
 		{
 			get
@@ -22,74 +27,105 @@ namespace GopherClient.ViewModel.ResourceTypes
 			}
 		}
 
-		public GopherResource(byte[] data)
+		public override void AppendData(byte[] chunk, bool isLastChunk)
 		{
-			Doc = GenerateGopherDocument(data);
+			base.AppendData(chunk, isLastChunk);
+			unprocessedData += Encoding.ASCII.GetString(chunk);
+
+			InterpretData(isLastChunk);
 		}
 
-		public static FlowDocument GenerateGopherDocument(byte[] data)
+		private void InterpretData(bool isLastChunk)
 		{
-			string text = Encoding.ASCII.GetString(data);
-			string[] lines = text.Split("\n");
+			StringBuilder builder = new StringBuilder(unprocessedData);
+			List<GopherElement> elements = new List<GopherElement>();
+			string[] rows = builder.ToString().Split("\r\n");
+			int startindex = 0;
 
-			FlowDocument doc = new FlowDocument();
-			doc.FontFamily = new System.Windows.Media.FontFamily("Consolas");
-			Paragraph p = new Paragraph();
-
-			for (int i = 0; i < lines.Length; i++)
-			{
-				string line = lines[i];
-				if (line == String.Empty)
-				{
-					continue;
+			for (int i = 0; i < rows.Length; i++)
+            {
+				int length = rows[i].Length;
+				try
+                {
+					elements.Add(new GopherElement(rows[i]));
+					builder.Remove(startindex, length);
 				}
+                catch(Exception e)
+                {
+					if(i == rows.Length - 1 && isLastChunk){
+						elements.Add(new GopherElement('3', e.Message));
+						builder.Clear();
+                    }
+                }
+				startindex += length+3;
+            }
 
-				string[] splitbytabs = line.Split("\t");
-				string rline = splitbytabs[0].Substring(1);
+			unprocessedData = builder.ToString();
 
-				string path = splitbytabs[1];
-				string host = splitbytabs[2];
-				int port = int.Parse(splitbytabs[3]);
-
-				char type = line[0];
-				switch (type)
-				{
-					case '0':
-						p.Inlines.Add(GenerateHyperlink(rline, host, port, path, "text"));
-						break;
-					case '1':
-						p.Inlines.Add(GenerateHyperlink(rline, host, port, path, "gopher"));
-						break;
-					case 'i':
-						p.Inlines.Add(new Run(rline));
-						break;
-					case 'h':
-						p.Inlines.Add(new Run(rline));
-						break;
-					case 'd':
-						p.Inlines.Add(new Run(rline));
-						break;
-					case 's':
-						p.Inlines.Add(new Run(rline));
-						break;
-					default:
-						p.Inlines.Add(new Run(rline));
-						break;
-				}
-				if (i < lines.Length)
-					p.Inlines.Add(new LineBreak());
+			foreach (GopherElement element in elements){
+				AppendElementToPage(element);
 			}
-
-			doc.Blocks.Add(p);
-			doc.PageWidth = 1000;
-			return doc;
 		}
 
-		private static Hyperlink GenerateHyperlink(string text, string host, int port, string path, string type)
+		public void AppendElementToPage(GopherElement element)
+        {
+			Doc.Blocks.Add(new Paragraph(ConstructInline(element)));
+        }
+
+		public static Inline ConstructInline(GopherElement row)
+        {
+			switch (row.type)
+			{
+				case '0':
+					return GenerateHyperlink(row.text, row.host, row.port, row.path, ResourceType.Text);
+				case '1':
+					return GenerateHyperlink(row.text, row.host, row.port, row.path, ResourceType.Gopher);
+				case '3':
+					return new Run(row.text) { Foreground = Brushes.Red };
+				case 'i':
+					return new Run(row.text);
+				case 'h':
+					return new Run(row.text);
+				case 'd':
+					return new Run(row.text);
+				case 's':
+					return new Run(row.text);
+				default:
+					return new Run(row.text);
+			}
+		}
+
+		private static Hyperlink GenerateHyperlink(string text, string host, int port, string path, ResourceType type)
 		{
 			Hyperlink link = new Hyperlink(new Run(text));
-			link.Command = MainViewModel.NavigateToUrlBehavior($"gopher://{host}:{port}{path}", type);
+			string url = $"gopher://{host}:{port}/{ String.Join("/", path.Split("/").Where(s => s != string.Empty)) }";
+			link.ToolTip = url;
+			link.Command = MainViewModel.NavigateToUrlBehavior(url, type);
 			return link;
 		}
+	}
+
+	public class GopherElement
+	{
+		public readonly string text;
+		public readonly string host;
+		public readonly int port;
+		public readonly string path;
+		public readonly char type;
+
+		public GopherElement(string row){
+				type = row[0];
+				string[] columns = row.Split("\t");
+				text = columns[0].Substring(1);
+				path = columns[1];
+				host = columns[2];
+				port = int.Parse(columns[3]);
+		}
+
+		public GopherElement(char type, string text)
+        {
+			this.type = type;
+			this.text = text;
+        }
 	}
 }

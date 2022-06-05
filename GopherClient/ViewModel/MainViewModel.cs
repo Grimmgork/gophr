@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Documents;
@@ -22,39 +22,38 @@ namespace GopherClient.ViewModel
 	{
 		private static MainViewModel mvm;
 		private static CancellationTokenSource cancelTokenSource;
-		private static Task<Resource> task;
 
 		public ICommand BackCommand{
-			get{
-				return new RelayCommand(o => { Navigate(History.Previous(), null); }, o => History.HasPrevious);
+			get
+			{
+				return new RelayCommand(o => { Navigate(History.Previous()); }, o => History.HasPrevious);
 			}
 		}
 		public ICommand ForwardCommand
 		{
 			get
 			{
-				return new RelayCommand(o => { Navigate(History.Next(), null); }, o => History.HasNext);
+				return new RelayCommand(o => { Navigate(History.Next()); }, o => History.HasNext);
 			}
 		}
-
 		public ICommand RefreshCommand{
-			get{
-				return new RelayCommand(o => { Navigate(Location, null); }, o => true);
+			get
+			{
+				return new RelayCommand(o => { Navigate(History.Value); }, o => true);
 			}
 		}
 
-		private HistoryStack<string> History;
 
-		private string _location;
-		public string Location{
+		private HistoryStack<HistoryEntry> History = new HistoryStack<HistoryEntry>(100);
+
+		public string Url{
 			get{
-				return _location;
+				Trace.WriteLine("get URL string");
+				return History.Value.url;
 			}
 			set{
-				if(Location != value){
-					_location = value;
-					OnPropertyChanged("Location");
-					Navigate(Location, null);
+				if(Url != value && value != string.Empty){
+					Navigate(new HistoryEntry() { url=value, type=ResourceType.Unknown });
 				}
 			}
 		}
@@ -67,6 +66,17 @@ namespace GopherClient.ViewModel
 			set{
 				_info = value;
 				OnPropertyChanged("Info");
+			}
+		}
+
+		private int _dataSize;
+		public int DataSize{
+			get{
+				return _dataSize;
+			}
+			set{
+				_dataSize = value;
+				OnPropertyChanged("DataSize");
 			}
 		}
 
@@ -102,62 +112,92 @@ namespace GopherClient.ViewModel
 
 		public MainViewModel(){
 			MainViewModel.mvm = this;
-
-			ResourceFetcher.Init();
-			History = new HistoryStack<string>(100);
-			Location = "gopher://gopher.floodgap.com";
+			Configuration conf = Configuration.Load();
+			Url = "gopher://gopher.floodgap.com";
 		}
 
-		public async void Navigate(string url, string type)
+		public async void Navigate(HistoryEntry newLocation)
 		{
 			Result = null;
+			DataSize = 0;
 			Status = StatusState.fetching;
 
-			_location = url;
-			OnPropertyChanged("Location");
-			if(History.Value != url)
-				History.Push(url);
+			Uri uri = new Uri(newLocation.url);
 
-			if(cancelTokenSource != null)
+			if(History.Value != newLocation)
+				History.Push(newLocation);
+			OnPropertyChanged("Url");
+
+			if (cancelTokenSource != null)
 				cancelTokenSource.Cancel();
 
 			cancelTokenSource = new CancellationTokenSource();
 			CancellationToken t = cancelTokenSource.Token;
-			task = Task.Factory.StartNew(() => {  return ResourceFetcher.Request(url, t); }, t);
-			Trace.WriteLine("Start task!");	
-			try
+
+            ResourceRequest request = ResourceRequest.Request(uri, t);
+			
+			if(History.Value.type == ResourceType.Unknown){
+				History.Value = new HistoryEntry() { url = History.Value.url, type = await request.AwaitType(t) };
+            }
+
+			switch (History.Value.type)
 			{
-				await task;
-				Trace.WriteLine("Kek!");
+				case ResourceType.Gopher:
+					Result = new GopherResource();
+					break;
+				case ResourceType.Image:
+					Result = new TextResource();
+					break;
+				default:
+					Result = new TextResource();
+					break;
+			}
 
-				Resource request = task.Result;
-				if (type == null)
-					type = request.Type;
-
-				Status = StatusState.parsing;
-				switch(type){
-					case "gopher":
-						Result = new GopherResource(request.Data);
-						break;
-					case "image":
-						Result = new TextResource(request.Data);
-						break;
-					default:
-						Result = new TextResource(request.Data);
-						break;
+			while (!t.IsCancellationRequested)
+			{
+				byte[] chunks = null;
+				try{
+					chunks = await request.AwaitChunk(t);
 				}
+				catch(OperationCanceledException){
+					return;
+				}
+					
+				if (chunks == null)
+					break;
 
-				Status = StatusState.done;
-				Trace.WriteLine("Success!");
+				Result.AppendData(chunks, false);
+				DataSize = request.Size;
 			}
-			catch{
-				Trace.WriteLine("Error!");
-				Status = StatusState.error;
-			}
+
+			Status = StatusState.done;
+			DataSize = request.Size;
 		}
 
-		public static ICommand NavigateToUrlBehavior(string url, string type){
-			return new RelayCommand(o => { mvm.Navigate(url, type); }, o => true);
+		public static ICommand NavigateToUrlBehavior(string url, ResourceType type){
+			return new RelayCommand(o => { mvm.Navigate(new HistoryEntry() { url=url, type=type }); }, o => true);
 		}
 	}
+
+	public struct HistoryEntry
+    {
+		public string url { get; set; }
+		public ResourceType type { get; set; }
+
+		public static bool operator ==(HistoryEntry a, HistoryEntry b)
+		{
+			return a.url == b.url && a.type == b.type;
+		}
+
+		public static bool operator !=(HistoryEntry a, HistoryEntry b)
+		{
+			return a.url != b.url || a.type != b.type;
+		}
+
+        public override string ToString()
+        {
+			return $"Entry: {url}, {type}";
+        }
+
+    }
 }
