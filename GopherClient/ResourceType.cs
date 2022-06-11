@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GopherClient
 {
-	public enum ResourceType
+	public enum GopherResourceType
 	{
 		Unknown,
 		Gopher,
@@ -14,38 +14,38 @@ namespace GopherClient
 
 	public static class ResourceTypeMap
     {
-		public static ResourceType GetResourceType(char identifier)
+		public static GopherResourceType GetResourceType(char identifier)
         {	
             switch (identifier)
             {
 				case '0':
-					return ResourceType.Text;
+					return GopherResourceType.Text;
 				case '1':
-					return ResourceType.Gopher;
+					return GopherResourceType.Gopher;
 				case '9'://binary
-					return ResourceType.Text;
+					return GopherResourceType.Text;
 				case 'g'://gif
-					return ResourceType.Image;
+					return GopherResourceType.Image;
 				case 'I'://image
-					return ResourceType.Image;
+					return GopherResourceType.Image;
 				case '.':
-					return ResourceType.Unknown;
+					return GopherResourceType.Unknown;
 				case ' ':
-					return ResourceType.Unknown;
+					return GopherResourceType.Unknown;
 			}
 
 			throw new KeyNotFoundException($"'{identifier}' is Not defined!");
         }
 
-		public static char GetResourceIdentifier(ResourceType type)
+		public static char GetResourceIdentifier(GopherResourceType type)
 		{
 			switch (type)
 			{
-				case ResourceType.Text:
+				case GopherResourceType.Text:
 					return '0';
-				case ResourceType.Gopher:
+				case GopherResourceType.Gopher:
 					return '1';
-				case ResourceType.Image:
+				case GopherResourceType.Image:
 					return 'I';
 				default:
 					return '.';

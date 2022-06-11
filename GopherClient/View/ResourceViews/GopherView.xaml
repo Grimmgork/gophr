@@ -4,9 +4,78 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:GopherClient.View.ResourceViews"
+      xmlns:cc="clr-namespace:GopherClient.View.CustomControls"
+      xmlns:rt="clr-namespace:GopherClient.ViewModel.ResourceTypes"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Background="Black">
 
-    <FlowDocumentScrollViewer Document="{Binding Doc}"/>
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type rt:GopherElement}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Name="icon" Width="15" VerticalAlignment="Center" FontFamily="{StaticResource SymbolFont}" Height="15" Margin="15,0,5,0" Foreground="DarkSlateBlue"/>
+                <TextBlock Name="text" Text="{Binding text}" Foreground="White" FontSize="15"/>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Path=type}" Value="i">
+                    <Setter TargetName="icon" Property="Visibility" Value="Hidden"/>
+                    <Setter TargetName="text" Property="TextBlock.Foreground" Value="LightGray"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="1">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xed89;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="0">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xed0f;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="3">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xeca1;"/>
+                    <Setter TargetName="icon" Property="TextBlock.Foreground" Value="Red"/>
+                    <Setter TargetName="text" Property="TextBlock.Foreground" Value="Red"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="g">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xece3;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="9">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xed13;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="I">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xee45;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="7">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xee74;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="h">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xedcf;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value=".">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xf046;"/>
+                    <Setter TargetName="text" Property="TextBlock.Foreground" Value="Gray"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ListBox ItemsSource="{Binding Elements}" Background="black" Foreground="White" VirtualizingPanel.IsVirtualizing="True" SelectionMode="Single" SelectionChanged="ListBox_SelectionChanged" PreviewKeyDown="ListBox_PreviewKeyDown">
+        <ListBox.ItemContainerStyle>
+            <Style TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Path=type}" Value="i">
+                        <Setter Property="IsEnabled" Value="False"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ListBox.ItemContainerStyle>
+    </ListBox>
 </UserControl>

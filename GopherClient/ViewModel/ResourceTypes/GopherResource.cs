@@ -6,126 +6,128 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Linq;
+using GopherClient.Model.Protocols;
+using GopherClient.Model;
+using System.Windows;
+using System.Windows.Input;
+using GopherClient.Commands;
+using System.Windows.Media.Imaging;
+using System.Collections.ObjectModel;
 
 namespace GopherClient.ViewModel.ResourceTypes
 {
 	public class GopherResource : ResourceTypeBase
 	{
-		private string unprocessedData = "";
+		private static HashSet<char> supportedTypes = new HashSet<char>() { 'i', '0', '1', '3', '7', '9', 'g', 'I', 'h' };
+		private StringBuilder unprocessedData = new StringBuilder();
 
-		FlowDocument _doc = new FlowDocument() { PageWidth = 10000, FontFamily = new System.Windows.Media.FontFamily("Consolas"), Foreground = Brushes.WhiteSmoke, LineHeight = 1, PagePadding = new System.Windows.Thickness(10d) };
-		public FlowDocument Doc
-		{
-			get
-			{
-				return _doc;
-			}
-			set
-			{
-				_doc = value;
-				OnPropertyChanged("Doc");
-			}
-		}
-
+		public ObservableCollection<GopherElement> Elements { get; set; } = new ObservableCollection<GopherElement>();
 		public override void AppendData(byte[] chunk, bool isLastChunk)
 		{
 			base.AppendData(chunk, isLastChunk);
-			unprocessedData += Encoding.ASCII.GetString(chunk);
-
+			unprocessedData.Append(Encoding.ASCII.GetString(chunk));
 			InterpretData(isLastChunk);
 		}
 
-		private void InterpretData(bool isLastChunk)
-		{
-			StringBuilder builder = new StringBuilder(unprocessedData);
-			List<GopherElement> elements = new List<GopherElement>();
-			string[] rows = builder.ToString().Split("\r\n");
-			int startindex = 0;
-
-			for (int i = 0; i < rows.Length; i++)
-            {
-				int length = rows[i].Length;
-				try
-                {
-					elements.Add(new GopherElement(rows[i]));
-					builder.Remove(startindex, length);
-				}
-                catch(Exception e)
-                {
-					if(i == rows.Length - 1 && isLastChunk){
-						elements.Add(new GopherElement('3', e.Message));
-						builder.Clear();
-                    }
-                }
-				startindex += length+3;
-            }
-
-			unprocessedData = builder.ToString();
-
-			foreach (GopherElement element in elements){
-				AppendElementToPage(element);
-			}
-		}
-
-		public void AppendElementToPage(GopherElement element)
+		int _selectedIndex = 0;
+		public int SelectedIndex
         {
-			Doc.Blocks.Add(new Paragraph(ConstructInline(element)));
+            get
+            {
+				return _selectedIndex;
+            }
+            set
+            {
+				_selectedIndex = 2;
+				OnPropertyChanged("SelectedIndex");
+				Trace.WriteLine("Property changed " + _selectedIndex.ToString());
+				if(_selectedIndex != value)
+                {
+					if(Elements[value].type != 'i')
+						_selectedIndex = value;
+					OnPropertyChanged("SelectedIndex");
+				}
+            }
         }
 
-		public static Inline ConstructInline(GopherElement row)
+		private void GoNextUp()
         {
-			switch (row.type)
-			{
-				case '0':
-					return GenerateHyperlink(row.text, row.host, row.port, row.path, ResourceType.Text);
-				case '1':
-					return GenerateHyperlink(row.text, row.host, row.port, row.path, ResourceType.Gopher);
-				case '3':
-					return new Run(row.text) { Foreground = Brushes.Red };
-				case 'i':
-					return new Run(row.text);
-				case 'h':
-					return new Run(row.text);
-				case 'd':
-					return new Run(row.text);
-				case 's':
-					return new Run(row.text);
-				default:
-					return new Run(row.text);
+
+        }
+
+		private void GoNextDown()
+        {
+
+        }
+
+		private void InterpretData(bool isLastChunk)
+		{
+			string[] rows = unprocessedData.ToString().Split("\r\n");
+			for(int i = 0; i < rows.Length; i++)
+            {
+				string s = rows[i];
+				GopherElement element = null;
+				try
+                {
+					element = new GopherElement(s);
+				}
+                catch (Exception ex)
+                {
+					//if last row of chunk of data -> incomplete! wait for next chunk to complete
+					if(i == rows.Length - 1)
+                    {
+						unprocessedData = new StringBuilder(s);
+						break;
+					}
+
+					element = new GopherElement($"3{ex.Message}\t\t\t");
+                }
+
+				//point unsupported linux/dos/uuenc binary-files to just 'binary-file'
+				if (element.type == '5' || element.type == '4' || element.type == '6')
+					element.type = '9';
+
+				//point unsupported types to 'unsupported'
+				if (!IsTypeSupported(element.type))
+					element.type = '.';
+
+				Elements.Add(element);
 			}
 		}
 
-		private static Hyperlink GenerateHyperlink(string text, string host, int port, string path, ResourceType type)
-		{
-			Hyperlink link = new Hyperlink(new Run(text));
-			string url = $"gopher://{host}:{port}/{ String.Join("/", path.Split("/").Where(s => s != string.Empty)) }";
-			link.ToolTip = url;
-			link.Command = MainViewModel.NavigateToUrlBehavior(url, type);
-			return link;
-		}
-	}
+		public bool IsTypeSupported(char t)
+        {
+			return supportedTypes.Contains(t);
+        }
+    }
 
 	public class GopherElement
 	{
-		public readonly string text;
-		public readonly string host;
-		public readonly int port;
-		public readonly string path;
-		public readonly char type;
+		public string text { get; private set; }
+		public string host { get; private set; }
+		public int port { get; private set; }
+		public string path { get; private set; }
+		public char type { get; set; }
 
-		public GopherElement(string row){
-				type = row[0];
-				string[] columns = row.Split("\t");
-				text = columns[0].Substring(1);
-				path = columns[1];
-				host = columns[2];
-				port = int.Parse(columns[3]);
+		public GopherElement(string row)
+		{
+			type = row[0];
+			string[] columns = row.Split("\t");
+			text = columns[0].Substring(1);
+			path = columns[1];
+			host = columns[2];
+			port = 0;
+			int rport;
+			if(int.TryParse(columns[3],out rport))
+            {
+				port = rport;
+			}
 		}
 
 		public GopherElement(char type, string text)
-        {
+		{
 			this.type = type;
 			this.text = text;
-        }
+		}
 	}
 }

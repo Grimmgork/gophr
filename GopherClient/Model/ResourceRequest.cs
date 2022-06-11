@@ -49,12 +49,11 @@ namespace GopherClient.Model
 		internal CancellationToken cancelToken;
 
 		private bool hasType = false;
-		private ResourceType type = ResourceType.Unknown;
-		private Queue<byte[]> Chunks;
+		private GopherResourceType type = GopherResourceType.Unknown;
+		private Queue<byte[]> Chunks = new Queue<byte[]>();
 
-		public static ResourceRequest Request(Uri url, CancellationToken token, ResourceType forceType = ResourceType.Unknown) 
+		public static ResourceRequest Request(Uri url, CancellationToken token, GopherResourceType forceType = GopherResourceType.Unknown) 
 		{
-			
 			string scheme = url.Scheme;
 			ResourceRequest request = null;
 
@@ -62,14 +61,11 @@ namespace GopherClient.Model
 				case "gopher":
 					request = new GopherProtocol();
 					break;
-				case "file":
-					request = new FileProtocol();
-					break;
 				default:
 					throw new Exception("Protocol not supported!");
 			}
 
-			if (forceType != ResourceType.Unknown)
+			if (forceType != GopherResourceType.Unknown)
 				request.ReportType(forceType);
 
 			request.cancelToken = token;
@@ -81,20 +77,19 @@ namespace GopherClient.Model
 			return request;
 		}
 
-		public async Task<byte[]> AwaitChunk(CancellationToken t)
+		public async Task<byte[]> AwaitNextChunk(CancellationToken t)
 		{
 			return await Task.Run(() => {
 				while(true){
-					Thread.Sleep(10);
+					if (IsFinished && Chunks.Count == 0) return null;
 					if (t.IsCancellationRequested) throw new OperationCanceledException();
-					if (Chunks.Count != 0 ) break;
-					if (IsFinished) return null;
+					if (Chunks.Count != 0 ) return GetChunk();
+					Thread.Sleep(20);
 				}
-				return GetChunk();
 			}, t);
 		}
 
-		public async Task<ResourceType> AwaitType(CancellationToken t)
+		public async Task<GopherResourceType> AwaitType(CancellationToken t)
 		{
 			return await Task.Run(() => {
 				while (!hasType) { if (t.IsCancellationRequested || cancelToken.IsCancellationRequested) { throw new OperationCanceledException(); } };
@@ -102,14 +97,17 @@ namespace GopherClient.Model
 			});
 		}
 
-		internal ResourceRequest()
-		{
-			Chunks = new Queue<byte[]>();
-		}
+		public IEnumerable<byte[]> GetData(int chunksize, CancellationToken t)
+        {
+            while(!IsFinished && Chunks.Count != 0)
+            {
+				yield return AwaitNextChunk(t).Result;
+            }
+        }
 
 		internal virtual void MakeRequest() { }
 
-		internal void ReportType(ResourceType type)
+		internal void ReportType(GopherResourceType type)
 		{
 			if (hasType)
 				return;

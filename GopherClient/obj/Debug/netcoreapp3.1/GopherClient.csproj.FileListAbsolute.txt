@@ -49,3 +49,4 @@ C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceV
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\ResourceViews\ErrorView.baml
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.csproj.AssemblyReference.cache
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\GopherClient.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\Themes\Generic.baml

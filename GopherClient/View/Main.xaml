@@ -8,95 +8,111 @@
 		xmlns:rv="clr-namespace:GopherClient.View.ResourceViews"
 		xmlns:vmrt="clr-namespace:GopherClient.ViewModel.ResourceTypes"
         mc:Ignorable="d"
-        Title="gopherspace" Height="450" Width="800" Background="Black"
+        Title="gopherspace" Height="450" Width="800" Background="Black" FontFamily="Consolas"
 		>
 	<Window.DataContext>
 		<vm:MainViewModel/>
 	</Window.DataContext>
 
-	<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="25"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition/>
-			<RowDefinition Height="25"/>
-		</Grid.RowDefinitions>
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </Window.Resources>
 
-		<Border Grid.Row="1"  Background="WhiteSmoke"/>
-		<Grid>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition/>
-			</Grid.ColumnDefinitions>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top" IsEnabled="True">
+            <MenuItem Header="Settings">
+            </MenuItem>
+            
+            <MenuItem Header="History">
+            </MenuItem>
+            
+            <MenuItem Header="Bookmarks">
+                <MenuItem Header="http://gopher.floodgap.com:70" Icon="🎃"/>
+            </MenuItem>
+            
+            <MenuItem Header="Treat as">
+                <MenuItem Header="Gopher menu" Icon="1"/>
+                <Separator/>
+                <MenuItem Header="Text" Icon="0"/>
+                <MenuItem Header="CSO Phone Book" Icon="2"/>
+                <MenuItem Header="Query" Icon="7"/>
+                <Separator/>
+                <MenuItem Header="Download" Icon="9" />
+            </MenuItem>
+        </Menu>
 
-			<TextBox Grid.Column="4" Text="{Binding Url, Mode=TwoWay}" TextWrapping="NoWrap" AcceptsReturn="False" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
+        <DockPanel DockPanel.Dock="Top" Height="25">
+            <Button Width="25" FontSize="20" Content="&#xea64;" Command="{Binding BackCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Back"/>
+            <Button Width="25" FontSize="20"  Content="&#xea6e;" Command="{Binding ForwardCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Forward"/>
+            <Button Width="25" FontSize="15"  Content="&#xf074;" Command="{Binding RefreshCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Refresh"/>
+            <Button Width="25" FontSize="15"  Content="&#xf0e0;" Command="{Binding LoadServerRootCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Server Root"/>
+            <Button Width="25" FontSize="15"  Content="&#xea66;" Command="{Binding OneAboveCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Parent directory"/>
 
-			<Button Width="25" FontSize="20" Content="&#xea64;" Command="{Binding BackCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0"/>
-			<Button Width="25" FontSize="20"  Content="&#xea6e;" Command="{Binding ForwardCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0" Grid.Column="1"/>
-			<Button Width="25" FontSize="16"  Content="&#xf074;" Command="{Binding RefreshCommand}" FontFamily="{StaticResource SymbolFont}" BorderThickness="0" Grid.Column="2"/>
-		</Grid>
+            <TextBox Text="{Binding Url}" FontFamily="Consolas" TextWrapping="NoWrap" AcceptsReturn="False" KeyDown="TextBox_KeyDown" LostFocus="TextBox_LostFocus" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
+        </DockPanel>
 
-		<StatusBar Grid.Row="3" Background="WhiteSmoke">
-			<Separator Background="LightGray"/>
-			<StatusBarItem FontFamily="{StaticResource SymbolFont}" FontSize="17" Width="25" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-				<StatusBarItem.Style>
-					<Style TargetType="StatusBarItem">
-						<Style.Triggers>
-							<DataTrigger Binding="{Binding Status}" Value="done">
-								<Setter Property="Content" Value="&#xeb7b;"/>
-							</DataTrigger>
-							<DataTrigger Binding="{Binding Status}" Value="fetching">
-								<Setter Property="Content" Value="&#xef78;"/>
-							</DataTrigger>
-							<DataTrigger Binding="{Binding Status}" Value="parsing">
-								<Setter Property="Content" Value="&#xed0f;"/>
-							</DataTrigger>
-							<DataTrigger Binding="{Binding Status}" Value="error">
-								<Setter Property="Content" Value="&#xf149;"/>
-							</DataTrigger>
-						</Style.Triggers>
-					</Style>
-				</StatusBarItem.Style>
-			</StatusBarItem>
-			<Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
-			<StatusBarItem FontSize="14">
-				<StatusBarItem.Style>
-					<Style TargetType="StatusBarItem">
-						<Style.Triggers>
-							<DataTrigger Binding="{Binding Status}" Value="done">
-								<Setter Property="Content" Value="done!"/>
-							</DataTrigger>
-							<DataTrigger Binding="{Binding Status}" Value="fetching">
-								<Setter Property="Content" Value="fetching"/>
-							</DataTrigger>
-							<DataTrigger Binding="{Binding Status}" Value="parsing">
-								<Setter Property="Content" Value="parsing"/>
-							</DataTrigger>
-							<DataTrigger Binding="{Binding Status}" Value="error">
-								<Setter Property="Content" Value="error!"/>
-							</DataTrigger>
-						</Style.Triggers>
-					</Style>
-				</StatusBarItem.Style>
-			</StatusBarItem>
-			<StatusBarItem Content="{Binding Info}"/>
-			<StatusBarItem Content="{Binding DataSize}" HorizontalAlignment="Right"/>
-		</StatusBar>
+        <StatusBar DockPanel.Dock="Bottom" Background="WhiteSmoke">
+            <Separator Background="LightGray"/>
+            <StatusBarItem FontFamily="{StaticResource SymbolFont}" FontSize="17" Width="25" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
+                <StatusBarItem.Style>
+                    <Style TargetType="StatusBarItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="done">
+                                <Setter Property="Content" Value="&#xeb7b;"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="fetching">
+                                <Setter Property="Content" Value="&#xef78;"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="parsing">
+                                <Setter Property="Content" Value="&#xed0f;"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="error">
+                                <Setter Property="Content" Value="&#xf149;"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StatusBarItem.Style>
+            </StatusBarItem>
+            <Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
+            <StatusBarItem Width="50" HorizontalContentAlignment="Center">
+                <StatusBarItem.Style>
+                    <Style TargetType="StatusBarItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="done">
+                                <Setter Property="Content" Value="done!"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="fetching">
+                                <Setter Property="Content" Value="fetching"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="parsing">
+                                <Setter Property="Content" Value="parsing"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="error">
+                                <Setter Property="Content" Value="error!"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StatusBarItem.Style>
+            </StatusBarItem>
+            <Separator Background="LightGray"/>
+            <StatusBarItem Content="{Binding Info}"/>
+            <StatusBarItem Content="{Binding FormatedDataSize}" HorizontalAlignment="Right"/>
+        </StatusBar>
 
-		<ContentPresenter Grid.Row="2" Content="{Binding Result}">
-			<ContentPresenter.Resources>
-				<DataTemplate DataType="{x:Type vmrt:GopherResource}">
-					<rv:GopherView/>
-				</DataTemplate>
-				<DataTemplate DataType="{x:Type vmrt:TextResource}">
-					<rv:TextView/>
-				</DataTemplate>
-				<DataTemplate DataType="{x:Type vmrt:ErrorResource}">
-					<rv:ErrorView/>
-				</DataTemplate>
-			</ContentPresenter.Resources>
-		</ContentPresenter>
-	</Grid>
+        <ContentPresenter Content="{Binding Result}" IsEnabled="True">
+            <ContentPresenter.Resources>
+                <DataTemplate DataType="{x:Type vmrt:GopherResource}">
+                    <rv:GopherView/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vmrt:TextResource}">
+                    <rv:TextView/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vmrt:ErrorResource}">
+                    <rv:ErrorView/>
+                </DataTemplate>
+            </ContentPresenter.Resources>
+        </ContentPresenter>
+    </DockPanel>
 </Window>

@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Diagnostics;
 using System.Threading;
 using System.Linq;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace GopherClient.Model.Protocols
 {
@@ -12,72 +14,110 @@ namespace GopherClient.Model.Protocols
 	{
 		internal GopherProtocol() { }
 
+		public static Tuple<string, GopherResourceType> ExtractTypeFromUrl(string url)
+        {
+			Uri uri = new Uri(url);
+			GopherResourceType type = GopherResourceType.Unknown;
+			string[] segments = uri.AbsolutePath.Split("/");
+			segments = segments.Where(s => s != "").ToArray();
+
+			if(segments.Length > 0)
+            {
+				if (segments[0].Length == 1)
+				{
+					type = ResourceTypeMap.GetResourceType(segments[0][0]);
+					segments = segments.Skip(1).ToArray();
+				}
+			}
+
+			if(segments.Length == 0 && type == GopherResourceType.Unknown) {
+				type = GopherResourceType.Gopher;
+			}
+
+			url = $"{uri.Scheme}://{uri.Host}/{String.Join("/", segments)}";
+			return new Tuple<string, GopherResourceType>(url, type);
+		}
+
+		public static string EmbedTypeInUrl(string url, GopherResourceType type)
+        {
+			Uri uri = new Uri(url);
+			string[] segments = uri.AbsolutePath.Split("/");
+			segments = segments.Where(s => s != "").ToArray();
+			string identifier = ResourceTypeMap.GetResourceIdentifier(type).ToString();
+			if (segments.Length > 0 && segments[0].Length == 1)
+				segments[0] = identifier;
+			else
+				segments = segments.Prepend(ResourceTypeMap.GetResourceIdentifier(type).ToString()).ToArray();
+
+			string result = $"{uri.Scheme}://{uri.Host}/{String.Join("/", segments)}";
+			return result;
+        }
+
+		public static string GetOneAbove(string url)
+        {
+			Uri uri = new Uri(url);
+			string[] segments = uri.AbsolutePath.Split("/").Where(s => s != "").ToArray();
+			if(segments.Length > 0)
+            {
+				segments = segments.Take(segments.Length - 1).ToArray();
+            }
+
+			return EmbedTypeInUrl($"{uri.Scheme}://{uri.Host}/{String.Join("/", segments)}", GopherResourceType.Gopher);
+		}
+
+		public static string GetServerMainPage(string url)
+        {
+			return EmbedTypeInUrl(new Uri(ExtractTypeFromUrl(url).Item1).GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped), GopherResourceType.Gopher); 
+        }
+			
+		public async IAsyncEnumerable<byte[]> RequestData(int buffersize, CancellationToken t)
+        {
+			TcpClient tcp = new TcpClient("gopher.floodgap.com", 70);
+			NetworkStream stream = tcp.GetStream();
+			stream.Write(Encoding.ASCII.GetBytes("/gopher\n"));
+			Thread.Sleep(1000);
+			while(!t.IsCancellationRequested && stream.DataAvailable)
+            {
+				byte[] chunk = new byte[buffersize];
+				await stream.ReadAsync(chunk, 0, buffersize);
+				yield return chunk;
+			}
+		}
+
 		internal override void MakeRequest()
 		{
 			base.MakeRequest();
-			int timeout = 0;
 
-			if (Url.AbsolutePath == "/" || Url.AbsolutePath == "")
-				ReportType(ResourceType.Gopher);
-			else
-				ReportType(ResourceType.Unknown);
+			string path = Url.AbsolutePath;
 
 			TcpClient tcp = new TcpClient(Url.Host, Url.Port);
 			tcp.ReceiveTimeout = 3000;
 			tcp.ReceiveBufferSize = 255;
 			NetworkStream stream = tcp.GetStream();
-			
-			stream.Write(Encoding.ASCII.GetBytes(Url.AbsolutePath + "\n"));
+			stream.Write(Encoding.ASCII.GetBytes(path + "\n"));
 
-			const int buffersize = 2048;
-
-			int totalIndex = 0;
-			int totalChunks = 0;
-
-			byte[] lastChunk = null;
+			const int buffersize = 255;
 
 			while (!cancelToken.IsCancellationRequested && tcp.Connected)
 			{
-				if(!stream.DataAvailable)
+				
+				bool timeout = false;
+				DateTime start = DateTime.Now;
+				while(!stream.DataAvailable) 
 				{
-					timeout++;
-					if (timeout > 100)
+					if (DateTime.Now.Subtract(start).Seconds > 2){
+						timeout = true;
 						break;
-
-					Thread.Sleep(10);
-					continue;
+					}
 				}
 
-				timeout = 0;
+				if (timeout)
+					break;
 				
 				byte[] chunk = new byte[buffersize];
 				int lengthOfChunk = stream.Read(chunk, 0, buffersize);
-				totalIndex += lengthOfChunk;
 				chunk = chunk.Take(lengthOfChunk).ToArray();
 				ReportChunk(chunk);
-				totalChunks++;
-
-				string lastString = "";
-				if(lastChunk == null && chunk.Length >= 5){
-					lastString = Encoding.ASCII.GetString(chunk.TakeLast(5).ToArray());
-				}
-				else{
-					if (chunk.Length >= 5){
-						lastString = Encoding.ASCII.GetString(chunk.TakeLast(5).ToArray());
-					}
-					else{
-						int l = Math.Min(5, chunk.Length-1); //gopher://sdf.org:70/users/mmww/files/audio/Endgame_volup.ogg
-						int c = chunk.Length - l;
-						lastString = Encoding.ASCII.GetString(lastChunk.TakeLast(l).ToArray()) + Encoding.ASCII.GetString(chunk.TakeLast(c).ToArray());
-					}
-				}
-
-				if (lastString == "\r\n.\r\n"){
-					break;
-				}
-
-				lastChunk = chunk;
-				Thread.Sleep(5);
 			}
 
 			stream.Close();

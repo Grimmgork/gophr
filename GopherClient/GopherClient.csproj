@@ -7,9 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icons\folders-fill.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
 	  <Resource Include="Resources\Fonts\remixicon.ttf">
 		  <CopyToOutputDirectory>true</CopyToOutputDirectory>
       </Resource>
+	  <Resource Include="Resources\Icons\folders-fill.svg">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Resource>
   </ItemGroup>
 
 </Project>

@@ -26,9 +26,25 @@ namespace GopherClient.View
 			InitializeComponent();
 		}
 
-		private void Hyperlink_Click(object sender, RoutedEventArgs e)
-		{
-			MessageBox.Show("Hello");
+        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+			base.OnKeyDown(e);
+			if (e.Key == Key.Return)
+            {
+				e.Handled = true;
+				// Kill logical focus
+				FocusManager.SetFocusedElement(FocusManager.GetFocusScope(sender as TextBox), null);
+				// Kill keyboard focus
+				Keyboard.ClearFocus();
+			}
+        }
+
+        private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+			TextBox tb = sender as TextBox;
+			tb.CaretIndex = tb.Text.Length;
+			Keyboard.ClearFocus();
+			FocusManager.SetFocusedElement(FocusManager.GetFocusScope(sender as TextBox), null);
 		}
-	}
+    }
 }
