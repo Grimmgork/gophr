@@ -8,15 +8,34 @@
       xmlns:rt="clr-namespace:GopherClient.ViewModel.ResourceTypes"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Background="Black">
+      Background="Black"
+      IsTabStop="True"
+      MouseDown="UserControl_MouseDown"
+      >
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="Up" Command="{Binding GoNextUpCommand}"/>
+        <KeyBinding Key="Down" Command="{Binding GoNextDownCommand}"/>
+    </UserControl.InputBindings>
 
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type rt:GopherElement}">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Name="icon" Width="15" VerticalAlignment="Center" FontFamily="{StaticResource SymbolFont}" Height="15" Margin="15,0,5,0" Foreground="DarkSlateBlue"/>
-                <TextBlock Name="text" Text="{Binding text}" Foreground="White" FontSize="15"/>
-            </StackPanel>
+            <Border Name="back" Background="Black" MouseDown="GopherItemMouseDown">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Name="icon" Width="15" VerticalAlignment="Center" FontFamily="{StaticResource SymbolFont}" Height="15" Margin="15,0,5,0" Foreground="DarkSlateBlue"/>
+                    <TextBlock Name="text" Text="{Binding text}" Foreground="White" FontSize="15"/>
+                </StackPanel>
+            </Border>
+            
             <DataTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="back" Property="Background" Value="DarkBlue"/>
+                </Trigger>
+
+                <DataTrigger Binding="{Binding Path=IsSelected}" Value="true">
+                    <Setter TargetName="back" Property="Background" Value="Blue"/>
+                </DataTrigger>
+
                 <DataTrigger Binding="{Binding Path=type}" Value="i">
                     <Setter TargetName="icon" Property="Visibility" Value="Hidden"/>
                     <Setter TargetName="text" Property="TextBlock.Foreground" Value="LightGray"/>
@@ -64,18 +83,29 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <ListBox ItemsSource="{Binding Elements}" Background="black" Foreground="White" VirtualizingPanel.IsVirtualizing="True" SelectionMode="Single" SelectionChanged="ListBox_SelectionChanged" PreviewKeyDown="ListBox_PreviewKeyDown">
-        <ListBox.ItemContainerStyle>
-            <Style TargetType="ListBoxItem">
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding Path=type}" Value="i">
-                        <Setter Property="IsEnabled" Value="False"/>
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-        </ListBox.ItemContainerStyle>
-    </ListBox>
+    <ItemsControl ItemsSource="{Binding Elements}" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.VerticalScrollBarVisibility="Visible">
+
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <VirtualizingStackPanel IsVirtualizing="True"
+                              VirtualizationMode="Recycling" >
+                </VirtualizingStackPanel>
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+
+        <ItemsControl.Template>
+            <ControlTemplate TargetType="ItemsControl">
+                <Border BorderThickness="{TemplateBinding BorderThickness}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              Background="{TemplateBinding Background}">
+                    <ScrollViewer CanContentScroll="True" 
+                      Padding="{TemplateBinding Padding}"
+                      Focusable="False">
+                        <ItemsPresenter />
+                    </ScrollViewer>
+                </Border>
+            </ControlTemplate>
+        </ItemsControl.Template>
+    </ItemsControl>
+    
 </UserControl>

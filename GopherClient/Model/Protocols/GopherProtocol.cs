@@ -38,6 +38,12 @@ namespace GopherClient.Model.Protocols
 			return new Tuple<string, GopherResourceType>(url, type);
 		}
 
+		public static string GenrateUrl(string host, string path, char type, int port = 70)
+        {
+			path = String.Join('/', path.Split("/").Where(s => s != ""));
+			return EmbedTypeInUrl($"gopher://{host}/{path}", ResourceTypeMap.GetResourceType(type));
+		}
+
 		public static string EmbedTypeInUrl(string url, GopherResourceType type)
         {
 			Uri uri = new Uri(url);

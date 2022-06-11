@@ -26,41 +26,17 @@ namespace GopherClient.View.ResourceViews
 			InitializeComponent();
 		}
 
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void UserControl_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            //ListBox lb = sender as ListBox;
-            //GopherElement from = null;
-            //GopherElement to = null;
-
-            //if (e.RemovedItems.Count > 0)
-            //    from = e.RemovedItems[0] as GopherElement;
-
-            //if (e.AddedItems.Count > 0)
-            //    to = e.AddedItems[0] as GopherElement;
-
-            //if (to == null)
-            //    return;
-
-            //if (to.type == 'i')
-            //{
-            //    if (from == null)
-            //    {
-            //        lb.UnselectAll();
-            //        e.Handled = true;
-            //        return;
-            //    }
-
-            //    Trace.WriteLine(lb.SelectedIndex);
-            //    lb.SelectedItem = from;
-            //    lb.SelectedIndex = (lb.DataContext as ObservableCollection<GopherElement>).IndexOf(from);
-            //    e.Handled = true;
-            //    return;
-            //}
+			Keyboard.Focus(this);
+			FocusManager.SetFocusedElement(this, null);
+			e.Handled = true;
         }
 
-        private void ListBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void GopherItemMouseDown(object sender, MouseButtonEventArgs e)
         {
-
+			GopherElement gopherElement = (sender as Border).DataContext as GopherElement;
+			(DataContext as GopherResource).ExecuteElement(gopherElement);
         }
     }
 }

@@ -21,6 +21,22 @@ namespace GopherClient.ViewModel.ResourceTypes
 		private static HashSet<char> supportedTypes = new HashSet<char>() { 'i', '0', '1', '3', '7', '9', 'g', 'I', 'h' };
 		private StringBuilder unprocessedData = new StringBuilder();
 
+		public ICommand GoNextUpCommand
+        {
+            get
+            {
+				return new RelayCommand(o => { SelectNextUp(); }, o => true);
+			}
+        }
+
+		public ICommand GoNextDownCommand
+		{
+			get
+			{
+				return new RelayCommand(o => { SelectNextDown(); }, o => true);
+			}
+		}
+
 		public ObservableCollection<GopherElement> Elements { get; set; } = new ObservableCollection<GopherElement>();
 		public override void AppendData(byte[] chunk, bool isLastChunk)
 		{
@@ -38,27 +54,44 @@ namespace GopherClient.ViewModel.ResourceTypes
             }
             set
             {
-				_selectedIndex = 2;
-				OnPropertyChanged("SelectedIndex");
-				Trace.WriteLine("Property changed " + _selectedIndex.ToString());
 				if(_selectedIndex != value)
                 {
-					if(Elements[value].type != 'i')
-						_selectedIndex = value;
+					int old = _selectedIndex;
+					_selectedIndex = value;
+					Elements[old].OnPropertyChanged("IsSelected");					
+					Elements[_selectedIndex].OnPropertyChanged("IsSelected");
 					OnPropertyChanged("SelectedIndex");
 				}
             }
         }
 
-		private void GoNextUp()
+		private void SelectNextUp()
         {
-
+			Trace.WriteLine("going up!");
+			SelectedIndex--;
         }
 
-		private void GoNextDown()
+		private void SelectNextDown()
         {
+			Trace.WriteLine("going down!");
+			SelectedIndex++;
+		}
 
-        }
+		public void ExecuteElement(GopherElement e)
+		{
+			switch (e.type)
+            {
+				case '1':
+					MainViewModel.NavigateToUrlBehavior(GopherProtocol.GenrateUrl(e.host, e.path, e.type, e.port)).Execute(null);
+					break;
+				case '0':
+					MainViewModel.NavigateToUrlBehavior(GopherProtocol.GenrateUrl(e.host, e.path, e.type, e.port)).Execute(null);
+					break;
+				case 'h':
+					MainViewModel.NavigateToUrlBehavior(GopherProtocol.GenrateUrl(e.host, e.path, e.type, e.port)).Execute(null);
+					break;
+			}
+		}
 
 		private void InterpretData(bool isLastChunk)
 		{
@@ -69,7 +102,7 @@ namespace GopherClient.ViewModel.ResourceTypes
 				GopherElement element = null;
 				try
                 {
-					element = new GopherElement(s);
+					element = new GopherElement(s,this);
 				}
                 catch (Exception ex)
                 {
@@ -80,7 +113,7 @@ namespace GopherClient.ViewModel.ResourceTypes
 						break;
 					}
 
-					element = new GopherElement($"3{ex.Message}\t\t\t");
+					element = new GopherElement($"3{ex.Message}\t\t\t",this);
                 }
 
 				//point unsupported linux/dos/uuenc binary-files to just 'binary-file'
@@ -92,6 +125,7 @@ namespace GopherClient.ViewModel.ResourceTypes
 					element.type = '.';
 
 				Elements.Add(element);
+				element.index = Elements.Count - 1;
 			}
 		}
 
@@ -101,7 +135,7 @@ namespace GopherClient.ViewModel.ResourceTypes
         }
     }
 
-	public class GopherElement
+	public class GopherElement : OnPropertyChangedBase
 	{
 		public string text { get; private set; }
 		public string host { get; private set; }
@@ -109,8 +143,21 @@ namespace GopherClient.ViewModel.ResourceTypes
 		public string path { get; private set; }
 		public char type { get; set; }
 
-		public GopherElement(string row)
+		public int index { get; set; }
+
+		private GopherResource parent;
+
+		public bool IsSelected
+        {
+            get
+            {
+				return parent.SelectedIndex == index;
+            }
+        }
+
+		public GopherElement(string row, GopherResource parent)
 		{
+			this.parent = parent;
 			type = row[0];
 			string[] columns = row.Split("\t");
 			text = columns[0].Substring(1);
@@ -122,12 +169,6 @@ namespace GopherClient.ViewModel.ResourceTypes
             {
 				port = rport;
 			}
-		}
-
-		public GopherElement(char type, string text)
-		{
-			this.type = type;
-			this.text = text;
 		}
 	}
 }
