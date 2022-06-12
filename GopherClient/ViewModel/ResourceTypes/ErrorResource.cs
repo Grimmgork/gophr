@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GopherClient.ViewModel.ResourceTypes
 {
-	public class ErrorResource : ResourceTypeBase
+	public class ErrorResource : RessourceViewModelBase
 	{
 		string _message;
 		public string Message{

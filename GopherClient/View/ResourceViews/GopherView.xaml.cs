@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -21,22 +22,28 @@ namespace GopherClient.View.ResourceViews
 	/// </summary>
 	public partial class GopherView : UserControl
 	{
-		public GopherView()
+        public GopherView()
 		{
-			InitializeComponent();
-		}
+            InitializeComponent();
+            DataContextChanged += GopherView_DataContextChanged;
+        }
 
-        private void UserControl_MouseDown(object sender, MouseButtonEventArgs e)
+        private void GopherView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-			Keyboard.Focus(this);
-			FocusManager.SetFocusedElement(this, null);
-			e.Handled = true;
+            GopherRessourceViewModel vm = this.DataContext as GopherRessourceViewModel;
+            vm.PropertyChanged += Vm_PropertyChanged;
+        }
+
+        private void Vm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "SelectedIndex")
+                (GopherElements.ItemContainerGenerator.ContainerFromIndex((sender as GopherRessourceViewModel).SelectedIndex) as FrameworkElement).BringIntoView(new Rect());
         }
 
         private void GopherItemMouseDown(object sender, MouseButtonEventArgs e)
         {
 			GopherElement gopherElement = (sender as Border).DataContext as GopherElement;
-			(DataContext as GopherResource).ExecuteElement(gopherElement);
+			(DataContext as GopherRessourceViewModel).ExecuteElement(gopherElement);
         }
     }
 }

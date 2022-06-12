@@ -10,9 +10,8 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Background="Black"
       IsTabStop="True"
-      MouseDown="UserControl_MouseDown"
       >
-
+    
     <UserControl.InputBindings>
         <KeyBinding Key="Up" Command="{Binding GoNextUpCommand}"/>
         <KeyBinding Key="Down" Command="{Binding GoNextDownCommand}"/>
@@ -83,11 +82,10 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <ItemsControl ItemsSource="{Binding Elements}" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.VerticalScrollBarVisibility="Visible">
-
+    <ItemsControl Name="GopherElements" ItemsSource="{Binding Elements}" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.VerticalScrollBarVisibility="Visible">
         <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-                <VirtualizingStackPanel IsVirtualizing="True"
+                <VirtualizingStackPanel Name="GopherElementsVirtualizingStackpanel" IsVirtualizing="True"
                               VirtualizationMode="Recycling" >
                 </VirtualizingStackPanel>
             </ItemsPanelTemplate>
@@ -107,5 +105,5 @@
             </ControlTemplate>
         </ItemsControl.Template>
     </ItemsControl>
-    
+
 </UserControl>

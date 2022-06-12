@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace GopherClient.ViewModel.ResourceTypes
 {
-	public class TextResource : ResourceTypeBase
+	public class TextResource : RessourceViewModelBase
 	{
 		FlowDocument _doc = new FlowDocument() { PageWidth = 1000 };
 		public FlowDocument Doc{

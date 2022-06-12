@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GopherClient.ViewModel.ResourceTypes
 {
-	public abstract class ResourceTypeBase : OnPropertyChangedBase
+	public abstract class RessourceViewModelBase : OnPropertyChangedBase
 	{
 		public List<byte[]> Chunks = new List<byte[]>();
 

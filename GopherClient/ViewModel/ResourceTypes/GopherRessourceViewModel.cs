@@ -16,7 +16,7 @@ using System.Collections.ObjectModel;
 
 namespace GopherClient.ViewModel.ResourceTypes
 {
-	public class GopherResource : ResourceTypeBase
+	public class GopherRessourceViewModel : RessourceViewModelBase
 	{
 		private static HashSet<char> supportedTypes = new HashSet<char>() { 'i', '0', '1', '3', '7', '9', 'g', 'I', 'h' };
 		private StringBuilder unprocessedData = new StringBuilder();
@@ -68,13 +68,15 @@ namespace GopherClient.ViewModel.ResourceTypes
 		private void SelectNextUp()
         {
 			Trace.WriteLine("going up!");
-			SelectedIndex--;
+			if(SelectedIndex > 0)
+				SelectedIndex--;
         }
 
 		private void SelectNextDown()
         {
 			Trace.WriteLine("going down!");
-			SelectedIndex++;
+			if(SelectedIndex < Elements.Count -1)
+				SelectedIndex++;
 		}
 
 		public void ExecuteElement(GopherElement e)
@@ -145,7 +147,7 @@ namespace GopherClient.ViewModel.ResourceTypes
 
 		public int index { get; set; }
 
-		private GopherResource parent;
+		private GopherRessourceViewModel parent;
 
 		public bool IsSelected
         {
@@ -155,7 +157,7 @@ namespace GopherClient.ViewModel.ResourceTypes
             }
         }
 
-		public GopherElement(string row, GopherResource parent)
+		public GopherElement(string row, GopherRessourceViewModel parent)
 		{
 			this.parent = parent;
 			type = row[0];

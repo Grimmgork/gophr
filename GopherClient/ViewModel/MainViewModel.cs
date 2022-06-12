@@ -148,8 +148,8 @@ namespace GopherClient.ViewModel
 			done
 		}
 
-		private ResourceTypeBase _result;
-		public ResourceTypeBase Result{
+		private RessourceViewModelBase _result;
+		public RessourceViewModelBase Result{
 			get{
 				return _result;
 			}
@@ -198,7 +198,7 @@ namespace GopherClient.ViewModel
 			switch (type)
 			{
 				case GopherResourceType.Gopher:
-					Result = new GopherResource();
+					Result = new GopherRessourceViewModel();
 					break;
 				case GopherResourceType.Image:
 					Result = new TextResource();

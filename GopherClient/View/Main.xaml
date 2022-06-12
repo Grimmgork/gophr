@@ -104,7 +104,7 @@
 
         <ContentPresenter Content="{Binding Result}" Name="MyContentPresenter">
             <ContentPresenter.Resources>
-                <DataTemplate DataType="{x:Type vmrt:GopherResource}">
+                <DataTemplate DataType="{x:Type vmrt:GopherRessourceViewModel}">
                     <rv:GopherView/>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vmrt:TextResource}">
