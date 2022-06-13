@@ -64,7 +64,6 @@ namespace GopherClient.ViewModel
 
 
 		private HistoryStack<string> History = new HistoryStack<string>(100);
-
 		public string Url{
 			get{
 				return History.Value;
@@ -72,9 +71,11 @@ namespace GopherClient.ViewModel
 			set{
 				if(Url != value && value != string.Empty){
 					Navigate(value);
+					OnPropertyChanged("Url");
 				}
 			}
 		}
+
 
 		private string _info;
 		public string Info{
@@ -148,8 +149,8 @@ namespace GopherClient.ViewModel
 			done
 		}
 
-		private RessourceViewModelBase _result;
-		public RessourceViewModelBase Result{
+		private IDataChunkConsumer _result;
+		public IDataChunkConsumer Result{
 			get{
 				return _result;
 			}
@@ -159,78 +160,124 @@ namespace GopherClient.ViewModel
 			}
 		}
 
+
 		public MainViewModel(){
 			if (MainViewModel.mvm != null)
 				throw new Exception("There can only be one MainViewModel instance!");
 
 			MainViewModel.mvm = this;
 			Configuration conf = Configuration.Load();
-			Url = "gopher://gopher.floodgap.com";
+			Navigate("gopher://gopher.floodgap.com");
 		}
 
-		public async void Navigate(string newLocation)
+		public void Navigate(string newLocation)
 		{
+			var typeExtraction = GopherProtocol.ExtractTypeFromUrl(newLocation);
+			GopherResourceType type = typeExtraction.Item2;
+			Uri realUrl = new Uri(typeExtraction.Item1);
+
+			string fullUrl = GopherProtocol.EmbedTypeInUrl(realUrl.ToString(), type);
+			if (History.Value != fullUrl)
+				History.Push(fullUrl);
+
+			OnPropertyChanged("Url");
+			switch (type)
+			{
+				case GopherResourceType.Gopher:
+					NewPage(new GopherPageViewModel(), realUrl);
+					break;
+				default:
+					OpenInExternalApplication(realUrl, type);
+					break;
+			}
+		}
+
+
+		public async void NewPage(IDataChunkConsumer consumer, Uri url)
+        {
 			if (cancelTokenSource != null)
 				cancelTokenSource.Cancel();
-
-			Result = null;
-			DataSize = 0;
-			Status = StatusState.fetching;
-
-			if(History.Value != newLocation)
-				History.Push(newLocation);
-			OnPropertyChanged("Url");
 
 			cancelTokenSource = new CancellationTokenSource();
 			CancellationToken t = cancelTokenSource.Token;
 
-			GopherResourceType type = GopherResourceType.Unknown;
-			Tuple<string, GopherResourceType> urlTypeExtraction = GopherProtocol.ExtractTypeFromUrl(newLocation);
+			ResourceRequest request = ResourceRequestFactory.NewRequest(url);
+			request.StartRequest(t);
 
-			type = urlTypeExtraction.Item2;
-			History.Value = GopherProtocol.EmbedTypeInUrl(urlTypeExtraction.Item1, type);
-			OnPropertyChanged("Url");
+			DataSize = 0;
+			Result = consumer;
+			Status = StatusState.fetching;
 
-			Uri finalUri = new Uri(urlTypeExtraction.Item1);
-
-			ResourceRequest request = ResourceRequest.Request(finalUri, t);
-
-			switch (type)
+			while (!t.IsCancellationRequested)
 			{
-				case GopherResourceType.Gopher:
-					Result = new GopherRessourceViewModel();
+				try
+				{
+					await Task.Run(() => Thread.Sleep(20));
+					byte[] chunk = await request.AwaitNextChunk(t);
+					if (chunk == null)
+					{
+						consumer.AddChunk(chunk, true);
+						Status = StatusState.parsing;
+						break;
+					}
+
+					consumer.AddChunk(chunk, false);
+					DataSize = request.Size;
+				}
+				catch (OperationCanceledException)
+				{
 					break;
-				case GopherResourceType.Image:
-					Result = new TextResource();
-					break;
-				default:
-					Result = new TextResource();
-					break;
+				}
 			}
 
-            while (!t.IsCancellationRequested)
-            {
-
-                try
-                {
-                    byte[] chunk = await request.AwaitNextChunk(t);
-                    if (chunk == null)
-                    {
-                        Status = StatusState.parsing;
-                        break;
-                    }
-
-                    Result.AppendData(chunk, false);
-                    DataSize = request.Size;
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-            }
-
-            Status = StatusState.done;
+			consumer.Dispose();
+			Status = StatusState.done;
 		}
+
+		public async void OpenInExternalApplication(Uri url, GopherResourceType type)
+		{
+			string filePath = Path.GetTempFileName();
+			await DownloadToFile(filePath, url);
+			string app = "notepad.exe";
+
+			using Process myProcess = new Process();
+			myProcess.StartInfo.FileName = app; //not the full application path
+			myProcess.StartInfo.Arguments = $"\"{filePath}\"";
+			myProcess.Start();
+		}
+
+
+		public Task DownloadToFile(string filePath, Uri url)
+		{
+			cancelTokenSource = new CancellationTokenSource();
+			CancellationToken t = cancelTokenSource.Token;
+			return StartBackgroundRequest(new FileWriter(filePath), url, t);
+		}
+
+		public Task StartBackgroundRequest(IDataChunkConsumer consumer, Uri url, CancellationToken t)
+        {
+			History.Pop();
+			OnPropertyChanged("Url");
+
+			ResourceRequest request = ResourceRequestFactory.NewRequest(url);
+			request.StartRequest(t);
+			return Task.Run(() =>
+			{
+				byte[] chunk = null;
+                while (!t.IsCancellationRequested)
+                {
+					chunk = request.AwaitNextChunk(t).Result;
+					if(chunk == null)
+                    {
+						consumer.AddChunk(chunk, true);
+						break;
+					}
+					consumer.AddChunk(chunk, false);
+				}
+				consumer.Dispose();
+			});
+		}
+
 
 		public static ICommand NavigateToUrlBehavior(string url){
 			return new RelayCommand(o => { mvm.Navigate(url); }, o => true);

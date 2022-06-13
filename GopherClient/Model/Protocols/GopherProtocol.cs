@@ -10,9 +10,14 @@ using System.IO;
 
 namespace GopherClient.Model.Protocols
 {
-	public class GopherProtocol : ResourceRequest //IScheme
+	public class GopherProtocol : ResourceRequest
 	{
-		internal GopherProtocol() { }
+		private bool waitForDots = false;
+
+		public GopherProtocol(Uri uri, bool waitForDots) : base(uri)
+        {
+			this.waitForDots = waitForDots;
+        }
 
 		public static Tuple<string, GopherResourceType> ExtractTypeFromUrl(string url)
         {
@@ -75,59 +80,64 @@ namespace GopherClient.Model.Protocols
         {
 			return EmbedTypeInUrl(new Uri(ExtractTypeFromUrl(url).Item1).GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped), GopherResourceType.Gopher); 
         }
-			
-		public async IAsyncEnumerable<byte[]> RequestData(int buffersize, CancellationToken t)
-        {
-			TcpClient tcp = new TcpClient("gopher.floodgap.com", 70);
-			NetworkStream stream = tcp.GetStream();
-			stream.Write(Encoding.ASCII.GetBytes("/gopher\n"));
-			Thread.Sleep(1000);
-			while(!t.IsCancellationRequested && stream.DataAvailable)
-            {
-				byte[] chunk = new byte[buffersize];
-				await stream.ReadAsync(chunk, 0, buffersize);
-				yield return chunk;
-			}
-		}
 
-		internal override void MakeRequest()
+
+		internal override Task StartRequest(CancellationToken t)
 		{
-			base.MakeRequest();
-
-			string path = Url.AbsolutePath;
-
-			TcpClient tcp = new TcpClient(Url.Host, Url.Port);
-			tcp.ReceiveTimeout = 3000;
-			tcp.ReceiveBufferSize = 255;
-			NetworkStream stream = tcp.GetStream();
-			stream.Write(Encoding.ASCII.GetBytes(path + "\n"));
-
-			const int buffersize = 255;
-
-			while (!cancelToken.IsCancellationRequested && tcp.Connected)
+			return Task.Run(() =>
 			{
-				
-				bool timeout = false;
-				DateTime start = DateTime.Now;
-				while(!stream.DataAvailable) 
+				const int buffersize = 255;
+				string path = Url.AbsolutePath;
+
+				TcpClient tcp = new TcpClient(Url.Host, Url.Port);
+				tcp.ReceiveTimeout = 3000;
+				tcp.ReceiveBufferSize = buffersize;
+				NetworkStream stream = tcp.GetStream();
+				stream.Write(Encoding.ASCII.GetBytes(path + "\n"));
+
+				string pattern = "\r\n.\r\n";
+				string lastChunk = "";
+
+				while (!t.IsCancellationRequested && tcp.Connected)
 				{
-					if (DateTime.Now.Subtract(start).Seconds > 2){
-						timeout = true;
-						break;
+					bool timeout = false;
+					DateTime start = DateTime.Now;
+					while (!stream.DataAvailable)
+					{
+						if (DateTime.Now.Subtract(start).Seconds > 2)
+						{
+							timeout = true;
+							break;
+						}
 					}
+
+					if (timeout)
+						break;
+
+					byte[] chunk = new byte[buffersize];
+					int lengthOfChunk = stream.Read(chunk, 0, buffersize);
+					chunk = chunk.Take(lengthOfChunk).ToArray();
+					ReportChunk(chunk);
+
+                    if (waitForDots)
+                    {
+						string newChunk = Encoding.ASCII.GetString(chunk);
+						string c = (lastChunk + newChunk);
+						Trace.WriteLine(c);
+						if (c.Contains(pattern))
+                        {
+							break;
+						}
+							
+						lastChunk = newChunk;
+                    }
 				}
 
-				if (timeout)
-					break;
-				
-				byte[] chunk = new byte[buffersize];
-				int lengthOfChunk = stream.Read(chunk, 0, buffersize);
-				chunk = chunk.Take(lengthOfChunk).ToArray();
-				ReportChunk(chunk);
-			}
+				stream.Close();
+				tcp.Close();
 
-			stream.Close();
-			tcp.Close();
+				ReportEnd();
+			});
 		}
-	}
+    }
 }

@@ -102,15 +102,12 @@
             <StatusBarItem Content="{Binding FormatedDataSize}" HorizontalAlignment="Right"/>
         </StatusBar>
 
-        <ContentPresenter Content="{Binding Result}" Name="MyContentPresenter">
+        <ContentPresenter  Content="{Binding Result}" Name="MyContentPresenter">
             <ContentPresenter.Resources>
-                <DataTemplate DataType="{x:Type vmrt:GopherRessourceViewModel}">
+                <DataTemplate DataType="{x:Type vmrt:GopherPageViewModel}">
                     <rv:GopherView/>
                 </DataTemplate>
-                <DataTemplate DataType="{x:Type vmrt:TextResource}">
-                    <rv:TextView/>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type vmrt:ErrorResource}">
+                <DataTemplate DataType="{x:Type vmrt:ErrorPageViewModel}">
                     <rv:ErrorView/>
                 </DataTemplate>
             </ContentPresenter.Resources>

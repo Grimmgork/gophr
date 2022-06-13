@@ -28,13 +28,15 @@ namespace GopherClient
 					return GopherResourceType.Image;
 				case 'I'://image
 					return GopherResourceType.Image;
+				case 'h':
+					return GopherResourceType.Unknown;
 				case '.':
 					return GopherResourceType.Unknown;
 				case ' ':
 					return GopherResourceType.Unknown;
+				default:
+					return GopherResourceType.Unknown;
 			}
-
-			throw new KeyNotFoundException($"'{identifier}' is Not defined!");
         }
 
 		public static char GetResourceIdentifier(GopherResourceType type)

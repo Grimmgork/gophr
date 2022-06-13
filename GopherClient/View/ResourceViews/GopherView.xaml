@@ -13,13 +13,16 @@
       >
     
     <UserControl.InputBindings>
-        <KeyBinding Key="Up" Command="{Binding GoNextUpCommand}"/>
-        <KeyBinding Key="Down" Command="{Binding GoNextDownCommand}"/>
+        <KeyBinding Key="Up" Command="{Binding SelectUpCommand}"/>
+        <KeyBinding Key="Down" Command="{Binding SelectDownCommand}"/>
+        <KeyBinding Key="Up" Modifiers="Ctrl" Command="{Binding SelectNextInteractableUpCommand}"/>
+        <KeyBinding Key="Down" Modifiers="Ctrl" Command="{Binding SelectNextInteractableDownCommand}"/>
+        <KeyBinding Key="Return" Command="{Binding ExecuteSelectedElementCommand}"/>
     </UserControl.InputBindings>
 
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type rt:GopherElement}">
-            <Border Name="back" Background="Black" MouseDown="GopherItemMouseDown">
+            <Border Name="back" Background="Black" MouseDown="GopherItemMouseDown" MouseEnter="back_MouseEnter" MouseLeave="back_MouseLeave">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Name="icon" Width="15" VerticalAlignment="Center" FontFamily="{StaticResource SymbolFont}" Height="15" Margin="15,0,5,0" Foreground="DarkSlateBlue"/>
                     <TextBlock Name="text" Text="{Binding text}" Foreground="White" FontSize="15"/>
@@ -35,23 +38,12 @@
                     <Setter TargetName="back" Property="Background" Value="Blue"/>
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding Path=type}" Value="i">
-                    <Setter TargetName="icon" Property="Visibility" Value="Hidden"/>
-                    <Setter TargetName="text" Property="TextBlock.Foreground" Value="LightGray"/>
-                </DataTrigger>
-
                 <DataTrigger Binding="{Binding Path=type}" Value="1">
                     <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xed89;"/>
                 </DataTrigger>
 
                 <DataTrigger Binding="{Binding Path=type}" Value="0">
                     <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xed0f;"/>
-                </DataTrigger>
-
-                <DataTrigger Binding="{Binding Path=type}" Value="3">
-                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xeca1;"/>
-                    <Setter TargetName="icon" Property="TextBlock.Foreground" Value="Red"/>
-                    <Setter TargetName="text" Property="TextBlock.Foreground" Value="Red"/>
                 </DataTrigger>
 
                 <DataTrigger Binding="{Binding Path=type}" Value="g">
@@ -76,7 +68,21 @@
 
                 <DataTrigger Binding="{Binding Path=type}" Value=".">
                     <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xf046;"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=IsInteractable}" Value="false">
                     <Setter TargetName="text" Property="TextBlock.Foreground" Value="Gray"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="i">
+                    <Setter TargetName="icon" Property="Visibility" Value="Hidden"/>
+                    <Setter TargetName="text" Property="TextBlock.Foreground" Value="LightGray"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=type}" Value="3">
+                    <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xeca1;"/>
+                    <Setter TargetName="icon" Property="TextBlock.Foreground" Value="Red"/>
+                    <Setter TargetName="text" Property="TextBlock.Foreground" Value="Red"/>
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>

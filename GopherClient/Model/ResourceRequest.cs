@@ -46,83 +46,79 @@ namespace GopherClient.Model
 			}
 		}
 
-		internal CancellationToken cancelToken;
+		private bool _hasType = false;
+		public bool HasType
+        {
+            get
+            {
+				return _hasType;
+            }
+			private set
+            {
+				_hasType = value;
+            }
+        }
 
-		private bool hasType = false;
+		
 		private GopherResourceType type = GopherResourceType.Unknown;
 		private Queue<byte[]> Chunks = new Queue<byte[]>();
 
-		public static ResourceRequest Request(Uri url, CancellationToken token, GopherResourceType forceType = GopherResourceType.Unknown) 
+		public ResourceRequest(Uri url)
+        {
+			this.Url = url;
+        }
+
+		public Task<byte[]> AwaitNextChunk(CancellationToken t)
 		{
-			string scheme = url.Scheme;
-			ResourceRequest request = null;
-
-			switch (scheme) {
-				case "gopher":
-					request = new GopherProtocol();
-					break;
-				default:
-					throw new Exception("Protocol not supported!");
-			}
-
-			if (forceType != GopherResourceType.Unknown)
-				request.ReportType(forceType);
-
-			request.cancelToken = token;
-			request.Url = url;
-			Task.Run(() =>{
-				request.MakeRequest();
-				request.IsFinished = true;
-			}, token);
-			return request;
-		}
-
-		public async Task<byte[]> AwaitNextChunk(CancellationToken t)
-		{
-			return await Task.Run(() => {
+			return Task.Run<byte[]>(() => {
 				while(true){
 					if (IsFinished && Chunks.Count == 0) return null;
 					if (t.IsCancellationRequested) throw new OperationCanceledException();
 					if (Chunks.Count != 0 ) return GetChunk();
-					Thread.Sleep(20);
 				}
 			}, t);
 		}
 
-		public async Task<GopherResourceType> AwaitType(CancellationToken t)
+		public Task<GopherResourceType> AwaitType(CancellationToken t)
 		{
-			return await Task.Run(() => {
-				while (!hasType) { if (t.IsCancellationRequested || cancelToken.IsCancellationRequested) { throw new OperationCanceledException(); } };
+			return Task.Run(() => {
+				while (!IsFinished)
+				{
+					if(t.IsCancellationRequested)
+						throw new OperationCanceledException();
+					if (HasType) 
+						return type;
+				}
 				return type;
 			});
 		}
 
-		public IEnumerable<byte[]> GetData(int chunksize, CancellationToken t)
-        {
-            while(!IsFinished && Chunks.Count != 0)
-            {
-				yield return AwaitNextChunk(t).Result;
-            }
-        }
-
-		internal virtual void MakeRequest() { }
+		internal virtual Task StartRequest(CancellationToken t) 
+		{
+			return null;
+		}
 
 		internal void ReportType(GopherResourceType type)
 		{
-			if (hasType)
-				return;
-
 			this.type = type;
-			hasType = true;
+			HasType = true;
 		}
 
 		internal void ReportChunk(byte[] chunk)
 		{
+			if (chunk == null || chunk.Length == 0)
+				return;
+
 			Size += chunk.Length;
 			lock (Chunks){
 				Chunks.Enqueue(chunk);
 			}
 		}
+
+		internal void ReportEnd()
+        {
+			IsFinished = true;
+        }
 
 		private byte[] GetChunk()
 		{

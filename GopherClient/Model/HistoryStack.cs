@@ -77,6 +77,14 @@ namespace GopherClient.Model
 			return result;
 		}
 
+		public T Pop()
+        {
+			T last = stack.Last.Value;
+			stack.RemoveLast();
+			current = stack.Last;
+			return last;
+        }
+
         public override string ToString()
         {
 			string result = "";

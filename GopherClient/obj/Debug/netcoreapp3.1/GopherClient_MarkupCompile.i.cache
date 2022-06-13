@@ -12,9 +12,9 @@ TRACE;DEBUG;NETCOREAPP;NETCOREAPP3_1;
 C:\Users\Eric\projects\gophr\GopherClient\App.xaml
 72025783167
 
-25-1017511196
+25-525562765
 192-1533232326
 Theme.xaml;Themes\Generic.xaml;View\Main.xaml;View\ResourceViews\ErrorView.xaml;View\ResourceViews\GopherView.xaml;View\ResourceViews\ImageView.xaml;View\ResourceViews\TextView.xaml;
 
-False
+True
 

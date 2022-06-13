@@ -30,20 +30,44 @@ namespace GopherClient.View.ResourceViews
 
         private void GopherView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            GopherRessourceViewModel vm = this.DataContext as GopherRessourceViewModel;
-            vm.PropertyChanged += Vm_PropertyChanged;
+            GopherPageViewModel vm = this.DataContext as GopherPageViewModel;
+            if(vm != null)
+                vm.PropertyChanged += Vm_PropertyChanged;
         }
 
         private void Vm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if(e.PropertyName == "SelectedIndex")
-                (GopherElements.ItemContainerGenerator.ContainerFromIndex((sender as GopherRessourceViewModel).SelectedIndex) as FrameworkElement).BringIntoView(new Rect());
+            {
+                int index = (sender as GopherPageViewModel).SelectedIndex;
+                ScrollViewer scrollViewer = VisualTreeHelper.GetChild(VisualTreeHelper.GetChild(GopherElements, 0), 0) as ScrollViewer;
+
+                //TODO
+            }
         }
 
         private void GopherItemMouseDown(object sender, MouseButtonEventArgs e)
         {
 			GopherElement gopherElement = (sender as Border).DataContext as GopherElement;
-			(DataContext as GopherRessourceViewModel).ExecuteElement(gopherElement);
+            gopherElement.Interact();
+        }
+
+        private void back_MouseEnter(object sender, MouseEventArgs e)
+        {
+            GopherElement gopherElement = (sender as Border).DataContext as GopherElement;
+            if(gopherElement.IsInteractable)
+                GopherPageViewModel.PushUrlToInfo(gopherElement);
+        }
+
+        private void back_MouseLeave(object sender, MouseEventArgs e)
+        {
+            GopherElement gopherElement = (sender as Border).DataContext as GopherElement;
+            GopherPageViewModel vm = this.DataContext as GopherPageViewModel;
+            GopherPageViewModel.PushUrlToInfo(null);
+
+            if(vm.SelectedElement != null)
+            if(vm.SelectedElement.IsInteractable)
+                GopherPageViewModel.PushUrlToInfo(vm.SelectedElement);
         }
     }
 }
