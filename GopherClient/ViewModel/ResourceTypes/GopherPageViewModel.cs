@@ -21,8 +21,8 @@ namespace GopherClient.ViewModel.ResourceTypes
 		public ObservableCollection<GopherElement> Elements { get; set; } = new ObservableCollection<GopherElement>();
 
 		private static HashSet<char> supportedTypes = new HashSet<char>() { 'i', '0', '1', '3', '7', '9', 'g', 'I', 'h' };
-		private StringBuilder unprocessedData = new StringBuilder();
 
+		public GopherPageInterpreter interpreter = new GopherPageInterpreter();
 
 		public ICommand SelectDownCommand
         {
@@ -75,9 +75,14 @@ namespace GopherClient.ViewModel.ResourceTypes
 		
 		public void AddChunk(byte[] chunk, bool isLastChunk)
 		{
-			if(chunk != null)
-				unprocessedData.Append(Encoding.ASCII.GetString(chunk));
-			InterpretData(isLastChunk);
+			string text = "";
+			if (chunk != null)
+            {
+				text = Encoding.ASCII.GetString(chunk);
+				InterpretData(text, isLastChunk);
+			}
+				
+			//Trace.WriteLine($"[CHUNK START]{text}[CHUNK END]");
 		}
 
 		int _selectedIndex = 0;
@@ -165,35 +170,24 @@ namespace GopherClient.ViewModel.ResourceTypes
 			return -1;
 		}
 
-		private void InterpretData(bool isLastChunk)
+		private void InterpretData(string newdata, bool isLastChunk)
 		{
-			string[] rows = unprocessedData.ToString().Split("\r\n");
+			string[] rows = interpreter.Interpret(newdata);
 			for(int i = 0; i < rows.Length; i++)
             {
 				string row = rows[i];
 				if (row == String.Empty || row == ".")
 					continue;
 
-				GopherElement element = null;
-				try
-                {
-					element = new GopherElement(row,this);
-				}
-                catch (Exception ex)
-                {
-					//if last row of chunk of data -> incomplete! wait for next chunk to complete
-					if(i == rows.Length - 1 && !isLastChunk)
-                    {
-						unprocessedData = new StringBuilder(row);
-						break;
-					}
-
-					element = new GopherElement($"3{ex.Message}\t\t\t", this);
-                }
+				GopherElement element = new GopherElement(row, this);
 
 				//point unsupported linux/dos/uuenc binary-files to just 'binary-file'
 				if (element.type == '5' || element.type == '4' || element.type == '6')
 					element.type = '9';
+
+				//point a png type to Image
+				if (element.type == 'p')
+					element.type = 'I';
 
 				//point unsupported types to 'unsupported'
 				if (!IsTypeSupported(element.type))
@@ -205,6 +199,15 @@ namespace GopherClient.ViewModel.ResourceTypes
 						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
 						break;
 					case '0':
+						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
+						break;
+					case 'I':
+						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
+						break;
+					case 'g':
+						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
+						break;
+					case 'h':
 						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
 						break;
 				}
@@ -225,8 +228,32 @@ namespace GopherClient.ViewModel.ResourceTypes
         }
     }
 
+	public class GopherPageInterpreter
+    {
+		StringBuilder unprocessed = new StringBuilder();
+		public string[] Interpret(string text)
+        {
+			List<string> result = new List<string>();
+			unprocessed.Append(text);
+			string u = unprocessed.ToString();
+			int index = u.IndexOf("\r\n");
+			while(index != -1)
+            {
+				string row = u.Substring(0, index);
+				result.Add(row);
+				u = new String(u.Skip(index + 2).ToArray());
+				index = u.IndexOf("\r\n");
+			}
+
+			unprocessed = new StringBuilder(u);
+
+			return result.ToArray();
+        }
+    }
+
 	public class GopherElement : OnPropertyChangedBase
 	{
+		public string source { get; private set; }
 		public string text { get; private set; }
 		public string host { get; private set; }
 		public int port { get; private set; }
@@ -257,6 +284,7 @@ namespace GopherClient.ViewModel.ResourceTypes
 
 		public GopherElement(string row, GopherPageViewModel parent)
 		{
+			this.source = row;
 			this.parent = parent;
 			type = row[0];
 			string[] columns = row.Split("\t");

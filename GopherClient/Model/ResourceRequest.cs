@@ -73,9 +73,11 @@ namespace GopherClient.Model
 			return Task.Run<byte[]>(() => {
 				while(true){
 					if (IsFinished && Chunks.Count == 0) return null;
-					if (t.IsCancellationRequested) throw new OperationCanceledException();
-					if (Chunks.Count != 0 ) return GetChunk();
+					if (t.IsCancellationRequested) break;
+					if (Chunks.Count > 0) return GetChunk();
+					Thread.Sleep(5);
 				}
+				return null;
 			}, t);
 		}
 
@@ -84,10 +86,11 @@ namespace GopherClient.Model
 			return Task.Run(() => {
 				while (!IsFinished)
 				{
-					if(t.IsCancellationRequested)
-						throw new OperationCanceledException();
-					if (HasType) 
+					if (HasType)
 						return type;
+					if (t.IsCancellationRequested)
+						break;
+					Thread.Sleep(5);
 				}
 				return type;
 			});

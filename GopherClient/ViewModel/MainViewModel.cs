@@ -125,6 +125,9 @@ namespace GopherClient.ViewModel
 					case 2:
 						appendix = "mb";
 						break;
+					case 3:
+						appendix = "gb";
+						break;
 				}
 				return $"{Math.Round(DataSize/MathF.Pow(1000, oom),0)} {appendix}";
             }
@@ -173,7 +176,7 @@ namespace GopherClient.ViewModel
 		public void Navigate(string newLocation)
 		{
 			var typeExtraction = GopherProtocol.ExtractTypeFromUrl(newLocation);
-			GopherResourceType type = typeExtraction.Item2;
+			char type = typeExtraction.Item2;
 			Uri realUrl = new Uri(typeExtraction.Item1);
 
 			string fullUrl = GopherProtocol.EmbedTypeInUrl(realUrl.ToString(), type);
@@ -183,7 +186,7 @@ namespace GopherClient.ViewModel
 			OnPropertyChanged("Url");
 			switch (type)
 			{
-				case GopherResourceType.Gopher:
+				case '1':
 					NewPage(new GopherPageViewModel(), realUrl);
 					break;
 				default:
@@ -212,7 +215,7 @@ namespace GopherClient.ViewModel
 			{
 				try
 				{
-					await Task.Run(() => Thread.Sleep(20));
+					await Task.Run(() => Thread.Sleep(10));
 					byte[] chunk = await request.AwaitNextChunk(t);
 					if (chunk == null)
 					{
@@ -234,16 +237,35 @@ namespace GopherClient.ViewModel
 			Status = StatusState.done;
 		}
 
-		public async void OpenInExternalApplication(Uri url, GopherResourceType type)
+		public async void OpenInExternalApplication(Uri url, char type)
 		{
-			string filePath = Path.GetTempFileName();
-			await DownloadToFile(filePath, url);
-			string app = "notepad.exe";
+			if(type == 'h')
+            {
+				string u = new String(url.AbsolutePath.Skip(5).ToArray());
+				OpenFileWithDefaultApp(u);
+				return;
+            }
 
-			using Process myProcess = new Process();
-			myProcess.StartInfo.FileName = app; //not the full application path
-			myProcess.StartInfo.Arguments = $"\"{filePath}\"";
-			myProcess.Start();
+			Status = StatusState.fetching;
+			Directory.CreateDirectory($"{Path.GetTempPath()}gophr");
+			string filePath = $"{Path.GetTempPath()}gophr/{url.AbsolutePath.Split("/").Last()}";
+            if(Path.GetExtension(filePath) == ""){
+				filePath += ".txt";
+            }
+
+			await DownloadToFile(filePath, url);
+			Status = StatusState.done;
+			OpenFileWithDefaultApp(filePath);
+		}
+
+		public void OpenFileWithDefaultApp(string path)
+        {
+			var ps = new ProcessStartInfo(path)
+			{
+				UseShellExecute = true,
+				Verb = "open"
+			};
+			Process.Start(ps);
 		}
 
 
@@ -260,15 +282,15 @@ namespace GopherClient.ViewModel
 			OnPropertyChanged("Url");
 
 			ResourceRequest request = ResourceRequestFactory.NewRequest(url);
-			request.StartRequest(t);
 			return Task.Run(() =>
 			{
+				request.StartRequest(t).Wait();
 				byte[] chunk = null;
-                while (!t.IsCancellationRequested)
-                {
+				while (!t.IsCancellationRequested)
+				{
 					chunk = request.AwaitNextChunk(t).Result;
-					if(chunk == null)
-                    {
+					if (chunk == null)
+					{
 						consumer.AddChunk(chunk, true);
 						break;
 					}
@@ -277,7 +299,6 @@ namespace GopherClient.ViewModel
 				consumer.Dispose();
 			});
 		}
-
 
 		public static ICommand NavigateToUrlBehavior(string url){
 			return new RelayCommand(o => { mvm.Navigate(url); }, o => true);

@@ -7,6 +7,9 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="View\Downloads.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="View\ResourceViews\ErrorView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -25,6 +28,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="View\Downloads.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="View\Main.xaml">

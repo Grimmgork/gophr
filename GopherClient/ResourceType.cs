@@ -28,6 +28,8 @@ namespace GopherClient
 					return GopherResourceType.Image;
 				case 'I'://image
 					return GopherResourceType.Image;
+				case 'p'://image
+					return GopherResourceType.Image;
 				case 'h':
 					return GopherResourceType.Unknown;
 				case '.':

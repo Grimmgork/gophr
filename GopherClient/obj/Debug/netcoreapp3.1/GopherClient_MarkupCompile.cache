@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NETCOREAPP;NETCOREAPP3_1;
 C:\Users\Eric\projects\gophr\GopherClient\App.xaml
-72025783167
+8-607507557
 
-23-1927931506
+241051142717
 192-1533232326
-Theme.xaml;Themes\Generic.xaml;View\Main.xaml;View\ResourceViews\ErrorView.xaml;View\ResourceViews\GopherView.xaml;View\ResourceViews\ImageView.xaml;View\ResourceViews\TextView.xaml;
+Theme.xaml;Themes\Generic.xaml;View\Downloads.xaml;View\Main.xaml;View\ResourceViews\ErrorView.xaml;View\ResourceViews\GopherView.xaml;View\ResourceViews\ImageView.xaml;View\ResourceViews\TextView.xaml;
 
 False
 

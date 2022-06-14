@@ -22,7 +22,7 @@
 
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type rt:GopherElement}">
-            <Border Name="back" Background="Black" MouseDown="GopherItemMouseDown" MouseEnter="back_MouseEnter" MouseLeave="back_MouseLeave">
+            <Border Name="back" Background="Black" MouseLeftButtonDown="GopherItemMouseDown" MouseEnter="back_MouseEnter" MouseLeave="back_MouseLeave" SnapsToDevicePixels="False">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Name="icon" Width="15" VerticalAlignment="Center" FontFamily="{StaticResource SymbolFont}" Height="15" Margin="15,0,5,0" Foreground="DarkSlateBlue"/>
                     <TextBlock Name="text" Text="{Binding text}" Foreground="White" FontSize="15"/>
@@ -83,6 +83,7 @@
                     <Setter TargetName="icon" Property="TextBlock.Text" Value="&#xeca1;"/>
                     <Setter TargetName="icon" Property="TextBlock.Foreground" Value="Red"/>
                     <Setter TargetName="text" Property="TextBlock.Foreground" Value="Red"/>
+                    <Setter TargetName="back" Property="Border.ToolTip" Value="{Binding source}"/>
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>

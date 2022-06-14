@@ -41,8 +41,6 @@ namespace GopherClient.View.ResourceViews
             {
                 int index = (sender as GopherPageViewModel).SelectedIndex;
                 ScrollViewer scrollViewer = VisualTreeHelper.GetChild(VisualTreeHelper.GetChild(GopherElements, 0), 0) as ScrollViewer;
-
-                //TODO
             }
         }
 
