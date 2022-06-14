@@ -13,7 +13,7 @@ using System.Windows.Threading;
 
 using GopherClient.Model;
 using GopherClient.Commands;
-using GopherClient.ViewModel.ResourceTypes;
+using GopherClient.ViewModel.BrowserPages;
 using System.Threading;
 using GopherClient.Model.Protocols;
 using System.Collections.ObjectModel;
@@ -25,6 +25,8 @@ namespace GopherClient.ViewModel
 	{
 		private static MainViewModel mvm;
 		private static CancellationTokenSource cancelTokenSource;
+
+		private DownloadWindowViewModel Downloads;
 
 		public ICommand BackCommand{
 			get
@@ -53,12 +55,26 @@ namespace GopherClient.ViewModel
 				return new RelayCommand(o => { Navigate( GopherProtocol.GetServerMainPage(History.Value) ); }, o => true);
 			}
 		}
-
 		public ICommand OneAboveCommand
 		{
 			get
 			{
 				return new RelayCommand(o => { Navigate(GopherProtocol.GetOneAbove(History.Value)); }, o => History.Value != GopherProtocol.GetServerMainPage(History.Value));
+			}
+		}
+		public ICommand CloseDownloadManagerCommand
+		{
+			get
+			{
+				return new RelayCommand(o => { Downloads.Close(); }, o => true);
+			}
+		}
+
+		public ICommand ShowDownloadManagerCommand
+        {
+			get
+			{
+				return new RelayCommand(o => { Downloads.Close(); Downloads.Show(); }, o => true);
 			}
 		}
 
@@ -87,6 +103,7 @@ namespace GopherClient.ViewModel
 				OnPropertyChanged("Info");
 			}
 		}
+
 
 		private int _dataSize;
 		public int DataSize{
@@ -144,7 +161,6 @@ namespace GopherClient.ViewModel
 				OnPropertyChanged("Status");
 			}
 		}
-
 		public enum StatusState{
 			fetching,
 			parsing,
@@ -152,24 +168,37 @@ namespace GopherClient.ViewModel
 			done
 		}
 
-		private IDataChunkConsumer _result;
-		public IDataChunkConsumer Result{
+
+		private BrowserPageBase _result;
+		public BrowserPageBase Result
+		{
 			get{
 				return _result;
 			}
 			set{
 				_result = value;
+                Result.PropertyChanged += Result_PropertyChanged;
 				OnPropertyChanged("Result");
 			}
 		}
 
+        private void Result_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "DataSize")
+            {
+				this.DataSize = (sender as BrowserPageBase).DataSize;
+            }
+        }
 
-		public MainViewModel(){
+        public MainViewModel(){
 			if (MainViewModel.mvm != null)
 				throw new Exception("There can only be one MainViewModel instance!");
 
 			MainViewModel.mvm = this;
 			Configuration conf = Configuration.Load();
+
+			Downloads = new DownloadWindowViewModel();
+
 			Navigate("gopher://gopher.floodgap.com");
 		}
 
@@ -189,14 +218,19 @@ namespace GopherClient.ViewModel
 				case '1':
 					NewPage(new GopherPageViewModel(), realUrl);
 					break;
+				case '9':
+					NewPage(new GopherPageViewModel(), realUrl);
+					break;
+				case '.':
+					NewPage(new GopherPageViewModel(), realUrl);
+					break;
 				default:
 					OpenInExternalApplication(realUrl, type);
 					break;
 			}
 		}
 
-
-		public async void NewPage(IDataChunkConsumer consumer, Uri url)
+		public async void NewPage(BrowserPageBase consumer, Uri url)
         {
 			if (cancelTokenSource != null)
 				cancelTokenSource.Cancel();
@@ -204,34 +238,13 @@ namespace GopherClient.ViewModel
 			cancelTokenSource = new CancellationTokenSource();
 			CancellationToken t = cancelTokenSource.Token;
 
-			ResourceRequest request = ResourceRequestFactory.NewRequest(url);
-			request.StartRequest(t);
+			ResourceRequest request = ResourceRequestFactory.NewRequest(url, t);
 
 			DataSize = 0;
 			Result = consumer;
 			Status = StatusState.fetching;
 
-			while (!t.IsCancellationRequested)
-			{
-				try
-				{
-					await Task.Run(() => Thread.Sleep(10));
-					byte[] chunk = await request.AwaitNextChunk(t);
-					if (chunk == null)
-					{
-						consumer.AddChunk(chunk, true);
-						Status = StatusState.parsing;
-						break;
-					}
-
-					consumer.AddChunk(chunk, false);
-					DataSize = request.Size;
-				}
-				catch (OperationCanceledException)
-				{
-					break;
-				}
-			}
+			await consumer.Consume(request, t);
 
 			consumer.Dispose();
 			Status = StatusState.done;
@@ -241,6 +254,8 @@ namespace GopherClient.ViewModel
 		{
 			if(type == 'h')
             {
+				History.Pop();
+				OnPropertyChanged("Url");
 				string u = new String(url.AbsolutePath.Skip(5).ToArray());
 				OpenFileWithDefaultApp(u);
 				return;
@@ -249,16 +264,13 @@ namespace GopherClient.ViewModel
 			Status = StatusState.fetching;
 			Directory.CreateDirectory($"{Path.GetTempPath()}gophr");
 			string filePath = $"{Path.GetTempPath()}gophr/{url.AbsolutePath.Split("/").Last()}";
-            if(Path.GetExtension(filePath) == ""){
-				filePath += ".txt";
-            }
 
 			await DownloadToFile(filePath, url);
 			Status = StatusState.done;
 			OpenFileWithDefaultApp(filePath);
 		}
 
-		public void OpenFileWithDefaultApp(string path)
+		public static void OpenFileWithDefaultApp(string path)
         {
 			var ps = new ProcessStartInfo(path)
 			{
@@ -267,7 +279,6 @@ namespace GopherClient.ViewModel
 			};
 			Process.Start(ps);
 		}
-
 
 		public Task DownloadToFile(string filePath, Uri url)
 		{
@@ -281,23 +292,8 @@ namespace GopherClient.ViewModel
 			History.Pop();
 			OnPropertyChanged("Url");
 
-			ResourceRequest request = ResourceRequestFactory.NewRequest(url);
-			return Task.Run(() =>
-			{
-				request.StartRequest(t).Wait();
-				byte[] chunk = null;
-				while (!t.IsCancellationRequested)
-				{
-					chunk = request.AwaitNextChunk(t).Result;
-					if (chunk == null)
-					{
-						consumer.AddChunk(chunk, true);
-						break;
-					}
-					consumer.AddChunk(chunk, false);
-				}
-				consumer.Dispose();
-			});
+			ResourceRequest request = ResourceRequestFactory.NewRequest(url, t);
+			return consumer.Consume(request, t);
 		}
 
 		public static ICommand NavigateToUrlBehavior(string url){

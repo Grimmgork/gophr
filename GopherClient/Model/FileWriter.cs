@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GopherClient.Model
 {
@@ -14,7 +16,7 @@ namespace GopherClient.Model
             fs = File.Create(filename);
         }
 
-        public void AddChunk(byte[] chunk, bool lastone)
+        private void AddChunk(byte[] chunk, bool lastone)
         {
             if (lastone)
             {
@@ -31,10 +33,25 @@ namespace GopherClient.Model
         {
             fs.Close();
         }
-    }
 
-    public interface IDataChunkConsumer : IDisposable
-    {
-        public void AddChunk(byte[] chunk, bool lastone);
+        public Task Consume(ResourceRequest request, CancellationToken t)
+        {
+            return Task.Run(() =>
+            {
+                request.StartRequest(t).Wait();
+                byte[] chunk = null;
+                while (!t.IsCancellationRequested)
+                {
+                    chunk = request.AwaitNextChunk(t).Result;
+                    if (chunk == null)
+                    {
+                        AddChunk(chunk, true);
+                        break;
+                    }
+                    AddChunk(chunk, false);
+                }
+                Dispose();
+            });
+        }
     }
 }

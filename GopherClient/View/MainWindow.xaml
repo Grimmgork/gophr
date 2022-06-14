@@ -1,0 +1,109 @@
+﻿<Window x:Class="GopherClient.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GopherClient.View"
+        xmlns:vm="clr-namespace:GopherClient.ViewModel"
+		xmlns:rv="clr-namespace:GopherClient.View.BrowserPages"
+		xmlns:vmrt="clr-namespace:GopherClient.ViewModel.BrowserPages"
+        mc:Ignorable="d"
+        Title="gopherspace" Height="450" Width="800" Background="Black" FontFamily="Consolas" Closing="Window_Closing"
+		>
+
+    <Window.DataContext>
+		<vm:MainViewModel/>
+	</Window.DataContext>
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </Window.Resources>
+    
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File" IsTabStop="False">
+                <MenuItem Header="Download Manager" Command="{Binding ShowDownloadManagerCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="History" IsTabStop="False">
+            </MenuItem>
+
+            <MenuItem Header="Bookmarks" IsTabStop="False">
+                <MenuItem Header="http://gopher.floodgap.com:70" Icon="🎃"/>
+            </MenuItem>
+        </Menu>
+
+        <DockPanel DockPanel.Dock="Top" Height="25">
+            <Button Width="25" FontSize="20" Content="&#xea64;" Command="{Binding BackCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Back" IsTabStop="False"/>
+            <Button Width="25" FontSize="20"  Content="&#xea6e;" Command="{Binding ForwardCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Forward" IsTabStop="False"/>
+            <Button Width="25" FontSize="15"  Content="&#xf074;" Command="{Binding RefreshCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Refresh" IsTabStop="False"/>
+            <Button Width="25" FontSize="15"  Content="&#xf0e0;" Command="{Binding LoadServerRootCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Server Root" IsTabStop="False"/>
+            <Button Width="25" FontSize="15"  Content="&#xea66;" Command="{Binding OneAboveCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Parent directory" IsTabStop="False"/>
+
+            <!--<Button DockPanel.Dock="Right" Width="25" FontSize="15"  Content="&#xea66;" Command="{Binding OneAboveCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Downloads" IsTabStop="False"/>-->
+
+            <TextBox Text="{Binding Url}" FontFamily="Consolas" TextWrapping="NoWrap" AcceptsReturn="False" KeyDown="TextBox_KeyDown" LostFocus="TextBox_LostFocus" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
+        </DockPanel>
+
+        <StatusBar DockPanel.Dock="Bottom" Background="WhiteSmoke">
+            <Separator Background="LightGray"/>
+            <StatusBarItem FontFamily="{StaticResource SymbolFont}" FontSize="17" Width="25" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
+                <StatusBarItem.Style>
+                    <Style TargetType="StatusBarItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="done">
+                                <Setter Property="Content" Value="&#xeb7b;"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="fetching">
+                                <Setter Property="Content" Value="&#xef78;"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="parsing">
+                                <Setter Property="Content" Value="&#xed0f;"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="error">
+                                <Setter Property="Content" Value="&#xf149;"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StatusBarItem.Style>
+            </StatusBarItem>
+            <Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
+            <StatusBarItem Width="50" HorizontalContentAlignment="Center">
+                <StatusBarItem.Style>
+                    <Style TargetType="StatusBarItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="done">
+                                <Setter Property="Content" Value="done!"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="fetching">
+                                <Setter Property="Content" Value="fetching"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="parsing">
+                                <Setter Property="Content" Value="parsing"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="error">
+                                <Setter Property="Content" Value="error!"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StatusBarItem.Style>
+            </StatusBarItem>
+            <Separator Background="LightGray"/>
+            <StatusBarItem Content="{Binding Info}"/>
+            <StatusBarItem Content="{Binding FormatedDataSize}" HorizontalAlignment="Right"/>
+        </StatusBar>
+
+        <ContentPresenter  Content="{Binding Result}" Name="MyContentPresenter">
+            <ContentPresenter.Resources>
+                <DataTemplate DataType="{x:Type vmrt:GopherPageViewModel}">
+                    <rv:GopherView/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vmrt:ErrorPageViewModel}">
+                    <rv:ErrorView/>
+                </DataTemplate>
+            </ContentPresenter.Resources>
+        </ContentPresenter>
+    </DockPanel>
+</Window>

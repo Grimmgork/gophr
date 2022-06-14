@@ -7,19 +7,13 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="View\Downloads.xaml.cs">
+    <Compile Update="View\DownloadsWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="View\ResourceViews\ErrorView.xaml.cs">
+    <Compile Update="View\BrowserPages\ErrorView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="View\ResourceViews\GopherView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="View\ResourceViews\ImageView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="View\ResourceViews\TextView.xaml.cs">
+    <Compile Update="View\BrowserPages\GopherView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -27,25 +21,16 @@
     <Page Update="Theme.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Themes\Generic.xaml">
+    <Page Update="View\DownloadsWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="View\Downloads.xaml">
+    <Page Update="View\MainWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="View\Main.xaml">
+    <Page Update="View\BrowserPages\ErrorView.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="View\ResourceViews\ErrorView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="View\ResourceViews\GopherView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="View\ResourceViews\ImageView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="View\ResourceViews\TextView.xaml">
+    <Page Update="View\BrowserPages\GopherView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

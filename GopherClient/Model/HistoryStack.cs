@@ -55,6 +55,8 @@ namespace GopherClient.Model
 			}
 			stack.AddLast(value);
 			current = stack.Last;
+			if (stack.Count > maxlength)
+				stack.RemoveFirst();
 		}
 
 		public T Previous(){

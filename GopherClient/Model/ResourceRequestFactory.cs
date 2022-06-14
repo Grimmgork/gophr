@@ -9,16 +9,17 @@ namespace GopherClient.Model
 {
     public static class ResourceRequestFactory
     {
-		public static ResourceRequest NewRequest(Uri url, GopherResourceType forceType = GopherResourceType.Unknown)
+		public static ResourceRequest NewRequest(Uri url, CancellationToken t, char forceType = '.')
 		{
 			string scheme = url.Scheme;
 			ResourceRequest request = null;
 			switch (scheme)
 			{
 				case "gopher":
-					bool waitForDots = (forceType == GopherResourceType.Gopher || forceType == GopherResourceType.Text);
+					bool waitForDots = (forceType == '1' || forceType == '0');
 					waitForDots = true;
 					request = new GopherProtocol(url, waitForDots);
+					request.StartRequest(t);
 					break;
 				default:
 					throw new Exception("Protocol not supported!");

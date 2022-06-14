@@ -53,7 +53,7 @@ namespace GopherClient.View.ResourceViews {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/GopherClient;component/view/resourceviews/imageview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/GopherClient;V1.0.0.0;component/view/resourceviews/imageview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\View\ResourceViews\ImageView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

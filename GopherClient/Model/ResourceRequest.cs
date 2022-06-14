@@ -46,6 +46,8 @@ namespace GopherClient.Model
 			}
 		}
 
+
+		private char type = '.';
 		private bool _hasType = false;
 		public bool HasType
         {
@@ -60,7 +62,6 @@ namespace GopherClient.Model
         }
 
 		
-		private GopherResourceType type = GopherResourceType.Unknown;
 		private Queue<byte[]> Chunks = new Queue<byte[]>();
 
 		public ResourceRequest(Uri url)
@@ -81,7 +82,7 @@ namespace GopherClient.Model
 			}, t);
 		}
 
-		public Task<GopherResourceType> AwaitType(CancellationToken t)
+		public Task<char> AwaitType(CancellationToken t)
 		{
 			return Task.Run(() => {
 				while (!IsFinished)
@@ -101,7 +102,7 @@ namespace GopherClient.Model
 			return null;
 		}
 
-		internal void ReportType(GopherResourceType type)
+		internal void ReportType(char type)
 		{
 			this.type = type;
 			HasType = true;
