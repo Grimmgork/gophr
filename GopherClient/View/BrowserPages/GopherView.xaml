@@ -101,8 +101,6 @@
 
     <DockPanel>
 
-        
-        
         <ItemsControl Name="GopherElements" ItemsSource="{Binding Elements}" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.VerticalScrollBarVisibility="Visible">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>

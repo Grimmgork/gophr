@@ -47,3 +47,5 @@ C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\BrowserPa
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\BrowserPages\GopherView.g.cs
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\BrowserPages\ErrorView.baml
 C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\BrowserPages\GopherView.baml
+C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\QueryPrompt.g.cs
+C:\Users\Eric\projects\gophr\GopherClient\obj\Debug\netcoreapp3.1\View\QueryPrompt.baml

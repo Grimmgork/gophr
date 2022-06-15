@@ -50,27 +50,8 @@ namespace GopherClient.View.BrowserPages
             gopherElement.Interact();
         }
 
-        private void back_MouseEnter(object sender, MouseEventArgs e)
-        {
-            GopherElement gopherElement = (sender as Border).DataContext as GopherElement;
-            if(gopherElement.IsInteractable)
-                GopherPageViewModel.PushUrlToInfo(gopherElement);
-        }
-
-        private void back_MouseLeave(object sender, MouseEventArgs e)
-        {
-            GopherElement gopherElement = (sender as Control).DataContext as GopherElement;
-            GopherPageViewModel vm = this.DataContext as GopherPageViewModel;
-            GopherPageViewModel.PushUrlToInfo(null);
-
-            if(vm.SelectedElement != null)
-            if(vm.SelectedElement.IsInteractable)
-                GopherPageViewModel.PushUrlToInfo(vm.SelectedElement);
-        }
-
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("kek");
             GopherElement gopherElement = (sender as Control).DataContext as GopherElement;
             GopherPageViewModel vm = this.DataContext as GopherPageViewModel;
             vm.DownloadElementToDisk(gopherElement);

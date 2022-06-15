@@ -23,8 +23,8 @@ namespace GopherClient.Model
 			}
 		}
 
-		Uri _uri;
-		public Uri Url
+		string _uri;
+		public string Url
         {
             get
             {
@@ -64,7 +64,7 @@ namespace GopherClient.Model
 		
 		private Queue<byte[]> Chunks = new Queue<byte[]>();
 
-		public ResourceRequest(Uri url)
+		public ResourceRequest(string url)
         {
 			this.Url = url;
         }

@@ -38,7 +38,6 @@ namespace GopherClient.Model
         {
             return Task.Run(() =>
             {
-                request.StartRequest(t).Wait();
                 byte[] chunk = null;
                 while (!t.IsCancellationRequested)
                 {

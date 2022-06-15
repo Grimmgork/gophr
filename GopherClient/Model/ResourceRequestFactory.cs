@@ -18,7 +18,7 @@ namespace GopherClient.Model
 				case "gopher":
 					bool waitForDots = (forceType == '1' || forceType == '0');
 					waitForDots = true;
-					request = new GopherProtocol(url, waitForDots);
+					request = new GopherProtocol(url.ToString(), waitForDots);
 					request.StartRequest(t);
 					break;
 				default:

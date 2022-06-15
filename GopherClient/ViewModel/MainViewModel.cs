@@ -18,6 +18,9 @@ using System.Threading;
 using GopherClient.Model.Protocols;
 using System.Collections.ObjectModel;
 using System.Windows.Controls;
+using Microsoft.Win32;
+using GopherClient.View;
+using static GopherClient.Model.Protocols.GopherProtocol;
 
 namespace GopherClient.ViewModel
 {
@@ -52,14 +55,14 @@ namespace GopherClient.ViewModel
 		{
 			get
 			{
-				return new RelayCommand(o => { Navigate( GopherProtocol.GetServerMainPage(History.Value) ); }, o => true);
+				return new RelayCommand(o => { Navigate(new GopherUrl(History.Value).GetServerRoot().ToString()); }, o => true);
 			}
 		}
 		public ICommand OneAboveCommand
 		{
 			get
 			{
-				return new RelayCommand(o => { Navigate(GopherProtocol.GetOneAbove(History.Value)); }, o => History.Value != GopherProtocol.GetServerMainPage(History.Value));
+				return new RelayCommand(o => { Navigate(new GopherUrl(History.Value).GetOneAbove().ToString() ); }, o => History.Value != new GopherUrl(History.Value).GetServerRoot().ToString());
 			}
 		}
 		public ICommand CloseDownloadManagerCommand
@@ -85,10 +88,8 @@ namespace GopherClient.ViewModel
 				return History.Value;
 			}
 			set{
-				if(Url != value && value != string.Empty){
-					Navigate(value);
-					OnPropertyChanged("Url");
-				}
+				Navigate(value);
+				OnPropertyChanged("Url");
 			}
 		}
 
@@ -184,10 +185,12 @@ namespace GopherClient.ViewModel
 
         private void Result_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == "DataSize")
+			switch (e.PropertyName)
             {
-				this.DataSize = (sender as BrowserPageBase).DataSize;
-            }
+				case "DataSize":
+					this.DataSize = (sender as BrowserPageBase).DataSize;
+					break;
+			}
         }
 
         public MainViewModel(){
@@ -198,48 +201,81 @@ namespace GopherClient.ViewModel
 			Configuration conf = Configuration.Load();
 
 			Downloads = new DownloadWindowViewModel();
-
 			Navigate("gopher://gopher.floodgap.com");
 		}
 
 		public void Navigate(string newLocation)
 		{
-			var typeExtraction = GopherProtocol.ExtractTypeFromUrl(newLocation);
-			char type = typeExtraction.Item2;
-			Uri realUrl = new Uri(typeExtraction.Item1);
+			Uri url = new Uri(newLocation);
+            switch (url.Scheme)
+            {
+				case "gopher":
+					NavigateGopher(new GopherUrl(newLocation));
+					break;
+				case "http":
+					NavigateGopher(new GopherUrl(newLocation));
+					break;
+				case "https":
+					NavigateGopher(new GopherUrl(newLocation));
+					break;
+				default:
+					MessageBox.Show("Protocol not supported!");
+					break;
+            }
+		}
 
-			string fullUrl = GopherProtocol.EmbedTypeInUrl(realUrl.ToString(), type);
-			if (History.Value != fullUrl)
-				History.Push(fullUrl);
-
+		public void NavigateGopher(GopherUrl gurl)
+        {
+			if (History.Value != gurl.ToString())
+				History.Push(gurl.ToString());
 			OnPropertyChanged("Url");
+
+			char type = gurl.Type;
+			Uri urlWithoutType = new Uri(gurl.UrlWithoutType());
 			switch (type)
 			{
 				case '1':
-					NewPage(new GopherPageViewModel(), realUrl);
+					CancellationToken t = NewPageCancelToken();
+					NewPage(new GopherPageViewModel(), ResourceRequestFactory.NewRequest(urlWithoutType, t), t);
+					break;
+				case '7':
+					if (gurl.Query == String.Empty)
+					{
+						QueryPrompt p = new QueryPrompt();
+						p.ShowDialog();
+						gurl.Query = p.Result;
+
+						History.Pop();
+						History.Push(gurl.ToString());
+						OnPropertyChanged("Url");
+					}
+
+					CancellationToken tt = NewPageCancelToken();
+					NewPage(new GopherPageViewModel(), ResourceRequestFactory.NewRequest(new Uri(gurl.ToString()), tt), tt);
 					break;
 				case '9':
-					NewPage(new GopherPageViewModel(), realUrl);
+					OpenFileDialog d = new OpenFileDialog();
+					d.ShowDialog();
+
+					if (d.FileName != String.Empty)
+						DownloadToFile(d.FileName, urlWithoutType);
+
+					History.Pop();
+					OnPropertyChanged("Url");
 					break;
-				case '.':
-					NewPage(new GopherPageViewModel(), realUrl);
+				case 'h':
+
 					break;
 				default:
-					OpenInExternalApplication(realUrl, type);
+					OpenInExternalApplication(urlWithoutType, type);
+					History.Pop();
+					OnPropertyChanged("Url");
 					break;
 			}
 		}
 
-		public async void NewPage(BrowserPageBase consumer, Uri url)
+		public async void NewPage(BrowserPageBase consumer, ResourceRequest request, CancellationToken t)
         {
-			if (cancelTokenSource != null)
-				cancelTokenSource.Cancel();
-
-			cancelTokenSource = new CancellationTokenSource();
-			CancellationToken t = cancelTokenSource.Token;
-
-			ResourceRequest request = ResourceRequestFactory.NewRequest(url, t);
-
 			DataSize = 0;
 			Result = consumer;
 			Status = StatusState.fetching;
@@ -250,17 +286,17 @@ namespace GopherClient.ViewModel
 			Status = StatusState.done;
 		}
 
+		public CancellationToken NewPageCancelToken()
+        {
+			if (cancelTokenSource != null)
+				cancelTokenSource.Cancel();
+
+			cancelTokenSource = new CancellationTokenSource();
+			return cancelTokenSource.Token;
+		}
+
 		public async void OpenInExternalApplication(Uri url, char type)
 		{
-			if(type == 'h')
-            {
-				History.Pop();
-				OnPropertyChanged("Url");
-				string u = new String(url.AbsolutePath.Skip(5).ToArray());
-				OpenFileWithDefaultApp(u);
-				return;
-            }
-
 			Status = StatusState.fetching;
 			Directory.CreateDirectory($"{Path.GetTempPath()}gophr");
 			string filePath = $"{Path.GetTempPath()}gophr/{url.AbsolutePath.Split("/").Last()}";
@@ -282,26 +318,22 @@ namespace GopherClient.ViewModel
 
 		public Task DownloadToFile(string filePath, Uri url)
 		{
-			cancelTokenSource = new CancellationTokenSource();
-			CancellationToken t = cancelTokenSource.Token;
-			return StartBackgroundRequest(new FileWriter(filePath), url, t);
-		}
-
-		public Task StartBackgroundRequest(IDataChunkConsumer consumer, Uri url, CancellationToken t)
-        {
-			History.Pop();
-			OnPropertyChanged("Url");
-
-			ResourceRequest request = ResourceRequestFactory.NewRequest(url, t);
-			return consumer.Consume(request, t);
+			CancellationToken t = new CancellationTokenSource().Token;
+			return new FileWriter(filePath).Consume( ResourceRequestFactory.NewRequest(url, t), t);
 		}
 
 		public static ICommand NavigateToUrlBehavior(string url){
 			return new RelayCommand(o => { mvm.Navigate(url); }, o => true);
 		}
-
 		public static ICommand UpdateInfo(string text){
 			return new RelayCommand(o => { mvm.Info = text; }, o => true);
 		}
 	}
+
+	public class ExternalAppCommand
+    {
+		public string type;
+		public string app;
+		public string arguments;
+    }
 }

@@ -123,9 +123,9 @@ namespace GopherClient.ViewModel.BrowserPages
 					SelectedElement.OnPropertyChanged("IsSelected");
 
 					if (SelectedElement.IsInteractable)
-						PushUrlToInfo(SelectedElement);
+						PushInfo(SelectedElement);
 					else
-						PushUrlToInfo(null);
+						PushInfo(null);
 				}
             }
         }
@@ -148,13 +148,13 @@ namespace GopherClient.ViewModel.BrowserPages
             }
         }
 
-		public static void PushUrlToInfo(GopherElement element)
+		public static void PushInfo(GopherElement element)
         {
-			string url = "";
+			string info = "";
 			if (element != null)
-				url = element.url;
+				info = $"{element.type} - {element.url}";
 
-			MainViewModel.UpdateInfo(url).Execute(null);
+			MainViewModel.UpdateInfo(info).Execute(null);
 		}
 
 		private void SelectUp()
@@ -192,7 +192,10 @@ namespace GopherClient.ViewModel.BrowserPages
 		public void DownloadElementToDisk(GopherElement e)
         {
 			string url = e.url;
-			MainViewModel.NavigateToUrlBehavior(GopherProtocol.EmbedTypeInUrl(url, '9')).Execute(null);
+			GopherUrl gurl = new GopherUrl(url);
+			gurl.Type = '9';
+
+			MainViewModel.NavigateToUrlBehavior(gurl.ToString()).Execute(null);
         }
 
 		private void InterpretData(string newdata, bool isLastChunk)
@@ -218,24 +221,8 @@ namespace GopherClient.ViewModel.BrowserPages
 				if (!IsTypeSupported(element.type))
 					element.type = '.';
 
-				switch (element.type)
-				{
-					case '1':
-						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
-						break;
-					case '0':
-						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
-						break;
-					case 'I':
-						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
-						break;
-					case 'g':
-						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
-						break;
-					case 'h':
-						element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
-						break;
-				}
+				if(element.type != 'i' && element.type != '.')
+					element.SetInteraction(MainViewModel.NavigateToUrlBehavior(element.url));
 
 				Elements.Add(element);
 				element.index = Elements.Count - 1;
@@ -256,7 +243,6 @@ namespace GopherClient.ViewModel.BrowserPages
         {
 			while (!t.IsCancellationRequested)
 			{
-				
 				try
 				{
 					await Task.Run(() => Thread.Sleep(5));
@@ -305,9 +291,6 @@ namespace GopherClient.ViewModel.BrowserPages
 	{
 		public string source { get; private set; }
 		public string text { get; private set; }
-		public string host { get; private set; }
-		public int port { get; private set; }
-		public string path { get; private set; }
 		public char type { get; set; }
 
 		public int index { get; set; }
@@ -333,33 +316,37 @@ namespace GopherClient.ViewModel.BrowserPages
         }
 
 		public GopherElement(string row, GopherPageViewModel parent)
-		{
+		{	
 			this.source = row;
 			this.parent = parent;
-			type = row[0];
+			GopherUrl u = new GopherUrl();
+
 			string[] columns = row.Split("\t");
 			text = columns[0].Substring(1);
-			path = columns[1];
-			host = columns[2];
-			port = -1;
-			int rport;
+			string path = columns[1];
 
-			if(int.TryParse(columns[3],out rport))
-            {
-				port = rport;
-			}
+			u.Host = columns[2];
+			u.Type = row[0];
+			this.type = u.Type;
 
-            try
-            {
-				
-				url = GopherProtocol.GenrateUrl(host, path, type, port);
-				if (type == 'h')
-					Trace.WriteLine(url);
-			}
-            catch
-            {
+			string[] split = path.Split("URL:");
+			u.Segments = split[0].Split("/").Where(a => a != "").ToArray();
 
+			int p = -1;
+			int.TryParse(columns[3], out p);
+			if (p != -1)
+				u.Port = p;
+			
+			if (u.Type == 'h')
+            {
+				if (split.Length > 1)
+                {
+					url = split[1];
+					return;
+				}
             }
+
+			url = u.ToString();
 		}
 
 		public void SetInteraction(ICommand interaction)
