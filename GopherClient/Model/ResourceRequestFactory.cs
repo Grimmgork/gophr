@@ -9,7 +9,7 @@ namespace GopherClient.Model
 {
     public static class ResourceRequestFactory
     {
-		public static ResourceRequest NewRequest(Uri url, CancellationToken t, char forceType = '.')
+		public static ResourceRequest NewRequest(GopherUrl url, CancellationToken t, char forceType = '.')
 		{
 			string scheme = url.Scheme;
 			ResourceRequest request = null;
@@ -18,7 +18,7 @@ namespace GopherClient.Model
 				case "gopher":
 					bool waitForDots = (forceType == '1' || forceType == '0');
 					waitForDots = true;
-					request = new GopherProtocol(url.ToString(), waitForDots);
+					request = new GopherProtocol(url, waitForDots);
 					request.StartRequest(t);
 					break;
 				default:

@@ -8,7 +8,7 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Background="Black"
-      IsTabStop="True" KeyDown="UserControl_KeyDown"
+      IsTabStop="True" Focusable="True" KeyDown="UserControl_KeyDown"
       >
 
     <UserControl.InputBindings>

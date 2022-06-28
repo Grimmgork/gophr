@@ -1,4 +1,5 @@
-﻿using GopherClient.ViewModel;
+﻿using GopherClient.View.BrowserPages;
+using GopherClient.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,19 +26,15 @@ namespace GopherClient.View
 		public MainWindow()
 		{
 			InitializeComponent();
-			Loaded += (sender, e) => { Keyboard.Focus(MyContentPresenter); };
+			Loaded += (sender, e) => { Keyboard.Focus(MainContentPresenter); };
 		}
 
 		private void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
 			base.OnKeyDown(e);
-			if (e.Key == Key.Return)
+			if (e.Key == Key.Return || e.Key == Key.Escape)
             {
 				(sender as TextBox).MoveFocus(new TraversalRequest(FocusNavigationDirection.Down));
-				// Kill logical focus
-				//FocusManager.SetFocusedElement(FocusManager.GetFocusScope(sender as TextBox), null);
-				//Trace.WriteLine(MoveFocus(new TraversalRequest(FocusNavigationDirection.Down)));
-				//Keyboard.ClearFocus();
 				e.Handled = true;
 			}
         }

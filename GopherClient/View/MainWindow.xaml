@@ -8,7 +8,7 @@
 		xmlns:rv="clr-namespace:GopherClient.View.BrowserPages"
 		xmlns:vmrt="clr-namespace:GopherClient.ViewModel.BrowserPages"
         mc:Ignorable="d"
-        Title="gopherspace" Height="450" Width="800" Background="Black" FontFamily="Consolas" Closing="Window_Closing"
+        Title="gopherspace" Height="700" Width="700" Background="Black" FontFamily="Consolas" Closing="Window_Closing"
 		>
 
     <Window.DataContext>
@@ -28,10 +28,11 @@
             </MenuItem>
 
             <MenuItem Header="History" IsTabStop="False">
+                
             </MenuItem>
 
             <MenuItem Header="Bookmarks" IsTabStop="False">
-                <MenuItem Header="http://gopher.floodgap.com:70" Icon="🎃"/>
+                
             </MenuItem>
         </Menu>
 
@@ -44,7 +45,7 @@
 
             <!--<Button DockPanel.Dock="Right" Width="25" FontSize="15"  Content="&#xea66;" Command="{Binding OneAboveCommand}" FontFamily="{StaticResource SymbolFont}" ToolTip="Downloads" IsTabStop="False"/>-->
 
-            <TextBox Text="{Binding Url}" FontFamily="Consolas" TextWrapping="NoWrap" AcceptsReturn="False" KeyDown="TextBox_KeyDown" LostFocus="TextBox_LostFocus" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
+            <TextBox Name="UrlTextbox" Text="{Binding Url}" FontFamily="Consolas" TextWrapping="NoWrap" AcceptsReturn="False" KeyDown="TextBox_KeyDown" LostFocus="TextBox_LostFocus" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
         </DockPanel>
 
         <StatusBar DockPanel.Dock="Bottom" Background="WhiteSmoke">
@@ -95,15 +96,24 @@
             <StatusBarItem Content="{Binding FormatedDataSize}" HorizontalAlignment="Right"/>
         </StatusBar>
 
-        <ContentPresenter  Content="{Binding Result}" Name="MyContentPresenter">
-            <ContentPresenter.Resources>
-                <DataTemplate DataType="{x:Type vmrt:GopherPageViewModel}">
-                    <rv:GopherView/>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type vmrt:ErrorPageViewModel}">
-                    <rv:ErrorView/>
-                </DataTemplate>
-            </ContentPresenter.Resources>
-        </ContentPresenter>
+        <DockPanel>
+            <local:DownloadManagerControl DockPanel.Dock="Right" Width="0">
+                
+            </local:DownloadManagerControl>
+
+            <ContentPresenter  Content="{Binding Result}" Name="MainContentPresenter">
+                <ContentPresenter.Resources>
+                    <DataTemplate DataType="{x:Type vmrt:GopherPageViewModel}">
+                        <rv:GopherView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vmrt:ErrorPageViewModel}">
+                        <rv:ErrorView/>
+                    </DataTemplate>
+                </ContentPresenter.Resources>
+            </ContentPresenter>
+
+            
+        </DockPanel>
+        
     </DockPanel>
 </Window>

@@ -12,4 +12,10 @@
       </Resource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="apps\chrome.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

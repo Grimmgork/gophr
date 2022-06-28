@@ -11,23 +11,38 @@ namespace GopherClient
 	[System.Serializable]
 	public class Configuration
 	{
-		public static string configFilePath = "config.json";
+		public static readonly string configFilePath = "config.json";
 		public string startUrl { get; internal set; }
 		public string[] bookmarks { get; internal set; }
+
+		public string[] trustetProtocols { get; internal set; }
+		public string[] trustedFileExtensions { get; internal set; }
+
+		public Dictionary<string, string> typeMappings { get; set; }
+
 
 		public static Configuration Default(){
 			return new Configuration()
 			{
-				startUrl = "kek!",
+				startUrl = "gopher://gopher.floodgap.com",
+				trustetProtocols = new string[] { "https", "http", "gopher" },
+				trustedFileExtensions = new string[] { ".txt", ".jpg", ".png", ".gif" },
+				typeMappings = new Dictionary<string, string>() { 
+					//{ "text/plain", @"c:\users\eric\projects\gophr\GopherClient\apps\chrome.cmd" }
+				}
 			};
 		}
 		
 		public static Configuration Load(){
+
+			return Default();
+
 			string fullpath = Directory.GetParent(Assembly.GetExecutingAssembly().Location) +"\\"+ configFilePath;
 
 			if (File.Exists(fullpath)){
 				return (Configuration) JsonSerializer.Deserialize(File.ReadAllText(fullpath), typeof(Configuration));
 			}
+
 			return Default();
 		}
 

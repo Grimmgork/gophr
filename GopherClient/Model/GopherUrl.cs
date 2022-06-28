@@ -2,17 +2,24 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Windows;
+using System.IO;
 
 namespace GopherClient.Model
 {
     public class GopherUrl
     {
+		string _scheme;
 		public string Scheme
 		{
 			get
 			{
-				return "gopher";
+				return _scheme;
 			}
+            set
+            {
+				_scheme = value;
+            }
 		}
 
 		string _host = "";
@@ -58,7 +65,7 @@ namespace GopherClient.Model
 		{
 			get
 			{
-				return $"{Path}{ (Query == String.Empty ? "" : $"?{Query}") }";
+				return $"{Path}{Query}";
 			}
 		}
 
@@ -66,7 +73,9 @@ namespace GopherClient.Model
 		{
 			get
 			{
-				return String.Join('/', Segments);
+				if (Segments.Length == 0)
+					return "";
+				return "/" + String.Join('/', Segments);
 			}
 		}
 
@@ -75,13 +84,28 @@ namespace GopherClient.Model
 		{
 			get
 			{
-				return _query;
+				if (_query == "")
+					return "";
+				return "\t" + _query;
 			}
 			set
 			{
 				_query = value;
 			}
 		}
+
+		private string _extension = "";
+		public string FileExtension
+        {
+            get
+            {
+				return _extension;
+            }
+			private set
+            {
+				_extension = value;
+            }
+        }
 
 		public string[] Segments = new string[] { };
 
@@ -92,18 +116,23 @@ namespace GopherClient.Model
 
 		public GopherUrl(string i)
 		{
+			if (i == null || i == String.Empty)
+				return;
+
 			Uri uri = new Uri(i);
 			Port = uri.Port;
-			if (uri.Scheme != "gopher")
-				throw new Exception("Not a gopher url!");
+			Scheme = uri.Scheme;
 
 			Host = uri.Host;
+			
+			FileExtension = System.IO.Path.GetExtension(uri.AbsolutePath);
 
 			Segments = GetSegments(uri.AbsolutePath);
 
 			if (Segments.Length == 0)
 			{
-				Type = '1';
+				if(Scheme == "gopher")
+					Type = '1';
 				return;
 			}
 
@@ -116,10 +145,8 @@ namespace GopherClient.Model
 			if (Segments.Length == 0)
 				return;
 
-			if (uri.Query == string.Empty || uri.Query == null)
-			{
-				Query = ExtractQuery(Segments);
-			}
+			if (Scheme == "gopher" && (Query == ""|| Query==null))
+				Query = ExtractGopherQuery(Segments);
 		}
 
 		private static string[] GetSegments(string path)
@@ -127,34 +154,30 @@ namespace GopherClient.Model
 			return path.Split("/").Where(s => s != "").ToArray();
 		}
 
-		private static string ExtractQuery(string[] segments)
+		private static string ExtractGopherQuery(string[] segments)
 		{
-			string result = "";
-			if (segments.Last().Contains("%09"))
+			if (segments.Length == 0)
+				return "";
+
+			string query = "";
+			string lastSegment = segments.Last();
+
+			lastSegment = lastSegment.Replace("%09", "\t");
+			int i = lastSegment.IndexOf("\t");
+			if (i != -1)
 			{
-				string[] s = segments.Last().Split("%09");
-				result = s[1];
-				segments[segments.Length - 1] = s[0];
-			}
-			else
-				if (segments.Last().Contains("%3F"))
-			{
-				string[] s = segments.Last().Split("%3F");
-				result = s[1];
-				segments[segments.Length - 1] = s[0];
+				query = lastSegment.Substring(i+1);
+				segments[segments.Length - 1] = lastSegment.Substring(0, i);
 			}
 
-			return result;
+			return query;
 		}
 
-		public override string ToString()
+		public string ToString(bool withType = true)
 		{
-			return $"gopher://{Host}:{Port}/{Type}/{PathAndQuery}";
-		}
-
-		public string UrlWithoutType()
-		{
-			return $"gopher://{Host}:{Port}/{PathAndQuery}";
+			if(withType)
+				return $"{Scheme}://{Host}:{Port}/{Type}{PathAndQuery}";
+			return $"{Scheme}://{Host}:{Port}{PathAndQuery}";
 		}
 
 		public GopherUrl GetServerRoot()

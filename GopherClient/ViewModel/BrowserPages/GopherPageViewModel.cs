@@ -325,6 +325,7 @@ namespace GopherClient.ViewModel.BrowserPages
 			text = columns[0].Substring(1);
 			string path = columns[1];
 
+			u.Scheme = "gopher";
 			u.Host = columns[2];
 			u.Type = row[0];
 			this.type = u.Type;

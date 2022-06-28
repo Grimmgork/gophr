@@ -13,11 +13,17 @@ namespace GopherClient.Model.Protocols
 	public class GopherProtocol : ResourceRequest
 	{
 		private bool waitForDots = false;
-		private GopherUrl Url;
 
-		public GopherProtocol(string url, bool waitForDots) : base(url)
+		private Dictionary<char, string> MimeMapping = new Dictionary<char, string>() { 
+			{ '0', "text/plain" },
+			{ '1', "text/gopher" },
+			{ 'g', "image/gif" },
+			{ 'I', "image" },
+			{ '7', "text/gopher" }
+		};
+
+		public GopherProtocol(GopherUrl gurl, bool waitForDots) : base(gurl)
         {
-			Url = new GopherUrl(url);
 			this.waitForDots = waitForDots;
         }
 
@@ -27,13 +33,19 @@ namespace GopherClient.Model.Protocols
 			{
 				waitForDots = false;
 
+				string mimeType = "";
+				if(MimeMapping.ContainsKey(Url.Type))
+					mimeType = MimeMapping[Url.Type];
+
+				ReportMimeType(mimeType);
+
 				const int buffersize = 1024;
 
 				TcpClient tcp = new TcpClient(Url.Host, Url.Port);
 				tcp.ReceiveBufferSize = buffersize;
 				tcp.ReceiveTimeout = 5000;
 				NetworkStream stream = tcp.GetStream();
-				stream.Write(Encoding.ASCII.GetBytes(Url.PathAndQuery + "\n"));
+				stream.Write(Encoding.ASCII.GetBytes(Uri.UnescapeDataString(Url.PathAndQuery) + "\n"));
 
 				int timeout = 0;
 				while(!t.IsCancellationRequested)

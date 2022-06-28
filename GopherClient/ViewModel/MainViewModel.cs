@@ -20,7 +20,6 @@ using System.Collections.ObjectModel;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using GopherClient.View;
-using static GopherClient.Model.Protocols.GopherProtocol;
 
 namespace GopherClient.ViewModel
 {
@@ -28,8 +27,11 @@ namespace GopherClient.ViewModel
 	{
 		private static MainViewModel mvm;
 		private static CancellationTokenSource cancelTokenSource;
+		private static string[] Args;
 
-		private DownloadWindowViewModel Downloads;
+		private Configuration config;
+
+		private DownloadManagerViewModel Downloads;
 
 		public ICommand BackCommand{
 			get
@@ -55,21 +57,23 @@ namespace GopherClient.ViewModel
 		{
 			get
 			{
-				return new RelayCommand(o => { Navigate(new GopherUrl(History.Value).GetServerRoot().ToString()); }, o => true);
+				return new RelayCommand(o => { }, o => false);
 			}
 		}
+
 		public ICommand OneAboveCommand
 		{
 			get
 			{
-				return new RelayCommand(o => { Navigate(new GopherUrl(History.Value).GetOneAbove().ToString() ); }, o => History.Value != new GopherUrl(History.Value).GetServerRoot().ToString());
+				return new RelayCommand(o => { }, o => false);
 			}
 		}
+
 		public ICommand CloseDownloadManagerCommand
 		{
 			get
 			{
-				return new RelayCommand(o => { Downloads.Close(); }, o => true);
+				return new RelayCommand(o => {  }, o => true);
 			}
 		}
 
@@ -77,7 +81,7 @@ namespace GopherClient.ViewModel
         {
 			get
 			{
-				return new RelayCommand(o => { Downloads.Close(); Downloads.Show(); }, o => true);
+				return new RelayCommand(o => {  }, o => true);
 			}
 		}
 
@@ -198,92 +202,80 @@ namespace GopherClient.ViewModel
 				throw new Exception("There can only be one MainViewModel instance!");
 
 			MainViewModel.mvm = this;
-			Configuration conf = Configuration.Load();
+			config = Configuration.Load();
+			Configuration.Save(config);
 
-			Downloads = new DownloadWindowViewModel();
+			string starturl = config.startUrl;
+			if (Args.Length > 0)
+				starturl = Args[0];
+
 			Navigate("gopher://gopher.floodgap.com");
 		}
 
-		public void Navigate(string newLocation)
+		public void Navigate(string newLocation, bool writeToHistory = true)
 		{
-			Uri url = new Uri(newLocation);
-            switch (url.Scheme)
+			GopherUrl url = new GopherUrl(newLocation);
+
+			if (url.Scheme != "gopher")
             {
-				case "gopher":
-					NavigateGopher(new GopherUrl(newLocation));
-					break;
-				case "http":
-					NavigateGopher(new GopherUrl(newLocation));
-					break;
-				case "https":
-					NavigateGopher(new GopherUrl(newLocation));
-					break;
-				default:
-					MessageBox.Show("Protocol not supported!");
-					break;
-            }
+				if (config.trustetProtocols.Contains(url.Scheme))
+					OpenUrl(url.ToString(false));
+                else
+                {
+					MessageBox.Show($"Cant resolve unsafe protocol '{url.Scheme}:', Copied url to clipboard!");
+					Clipboard.SetText(url.ToString(false));
+				}
+
+				return;
+			}
+
+			if (url.Type == '7' && url.Query == "")
+			{
+				QueryPrompt p = new QueryPrompt();
+				p.ShowDialog();
+				if (p.Result == "")
+					return;
+
+				url.Query = p.Result;
+			}
+
+			CancellationToken t = NewPageCancelToken();
+			DisplayResource(ResourceRequestFactory.NewRequest(url, t), t);
 		}
 
-		public void NavigateGopher(GopherUrl gurl)
-        {
-			if (History.Value != gurl.ToString())
-				History.Push(gurl.ToString());
-			OnPropertyChanged("Url");
+		public async void DisplayResource(ResourceRequest req, CancellationToken t)
+		{
+			Status = StatusState.fetching;
 
-			char type = gurl.Type;
-			Uri urlWithoutType = new Uri(gurl.UrlWithoutType());
-			switch (type)
-			{
-				case '1':
-					CancellationToken t = NewPageCancelToken();
-					NewPage(new GopherPageViewModel(), ResourceRequestFactory.NewRequest(urlWithoutType, t), t);
-					break;
-				case '7':
-					if (gurl.Query == String.Empty)
-					{
-						QueryPrompt p = new QueryPrompt();
-						p.ShowDialog();
-						gurl.Query = p.Result;
-
-						History.Pop();
-						History.Push(gurl.ToString());
-						OnPropertyChanged("Url");
-					}
-
-					CancellationToken tt = NewPageCancelToken();
-					NewPage(new GopherPageViewModel(), ResourceRequestFactory.NewRequest(new Uri(gurl.ToString()), tt), tt);
-					break;
-				case '9':
-					OpenFileDialog d = new OpenFileDialog();
-					d.ShowDialog();
-
-					if (d.FileName != String.Empty)
-						DownloadToFile(d.FileName, urlWithoutType);
-
-					History.Pop();
-					OnPropertyChanged("Url");
-					break;
-				case 'h':
-
+			string mimetype = await req.AwaitMimeType(t);
+            switch (mimetype)
+            {
+				case "text/gopher":
+					PushHistory(req.Url.ToString());
+					NewPage(new GopherPageViewModel(), req, t);
 					break;
 				default:
-					OpenInExternalApplication(urlWithoutType, type);
-					History.Pop();
-					OnPropertyChanged("Url");
+					DisplayFileExternal(req, t);
 					break;
 			}
+
+			Status = StatusState.done;
+		}
+
+		public void PushHistory(string url)
+        {
+			if (History.Value != url)
+				History.Push(url);
+
+			OnPropertyChanged("Url");
 		}
 
 		public async void NewPage(BrowserPageBase consumer, ResourceRequest request, CancellationToken t)
         {
 			DataSize = 0;
 			Result = consumer;
-			Status = StatusState.fetching;
-
 			await consumer.Consume(request, t);
-
 			consumer.Dispose();
-			Status = StatusState.done;
 		}
 
 		public CancellationToken NewPageCancelToken()
@@ -295,18 +287,34 @@ namespace GopherClient.ViewModel
 			return cancelTokenSource.Token;
 		}
 
-		public async void OpenInExternalApplication(Uri url, char type)
+		public async void DisplayFileExternal(ResourceRequest req, CancellationToken t)
 		{
-			Status = StatusState.fetching;
-			Directory.CreateDirectory($"{Path.GetTempPath()}gophr");
-			string filePath = $"{Path.GetTempPath()}gophr/{url.AbsolutePath.Split("/").Last()}";
+			string type = await req.AwaitMimeType(t);
 
-			await DownloadToFile(filePath, url);
-			Status = StatusState.done;
-			OpenFileWithDefaultApp(filePath);
+            if (config.typeMappings.ContainsKey(type))
+            {
+				string file = await DownloadToTempFile(req);
+				RunOpenAppCommand(type, file);
+				return;
+            }
+
+            if (config.trustedFileExtensions.Contains(req.Url.FileExtension))
+            {
+				string file = await DownloadToTempFile(req);
+				OpenUrl(file);
+				return;
+            }
+
+			//download to file permanently
+			SaveFileDialog d = new SaveFileDialog();
+			d.ShowDialog();
+			if (d.FileName == "")
+				return;
+
+			await DownloadToFile(d.FileName, req);
 		}
 
-		public static void OpenFileWithDefaultApp(string path)
+		public static void OpenUrl(string path)
         {
 			var ps = new ProcessStartInfo(path)
 			{
@@ -316,11 +324,27 @@ namespace GopherClient.ViewModel
 			Process.Start(ps);
 		}
 
-		public Task DownloadToFile(string filePath, Uri url)
+		public void RunOpenAppCommand(string mimeType, string filePath)
+        {
+			string batch = config.typeMappings[mimeType];
+			System.Diagnostics.Process.Start(batch, $"\"{filePath}\"");
+		}
+
+		public Task DownloadToFile(string filePath, ResourceRequest req, bool temp = true)
 		{
 			CancellationToken t = new CancellationTokenSource().Token;
-			return new FileWriter(filePath).Consume( ResourceRequestFactory.NewRequest(url, t), t);
+			return new FileWriter(filePath).Consume(req, t);
 		}
+
+		public Task<string> DownloadToTempFile(ResourceRequest req)
+        {
+			return Task.Run<string>(() => {
+				string filePath = $"{Path.GetTempPath()}gophr\\{Guid.NewGuid()}\\{req.Url.Segments.Last()}";
+				Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+				DownloadToFile(filePath, req).Wait();
+				return filePath;
+			});
+        }
 
 		public static ICommand NavigateToUrlBehavior(string url){
 			return new RelayCommand(o => { mvm.Navigate(url); }, o => true);
@@ -328,12 +352,10 @@ namespace GopherClient.ViewModel
 		public static ICommand UpdateInfo(string text){
 			return new RelayCommand(o => { mvm.Info = text; }, o => true);
 		}
-	}
 
-	public class ExternalAppCommand
-    {
-		public string type;
-		public string app;
-		public string arguments;
-    }
+		public static void SetArguments(string[] args)
+        {
+			Args = args;
+        }
+	}
 }

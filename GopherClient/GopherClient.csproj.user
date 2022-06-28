@@ -7,13 +7,13 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="View\DownloadsWindow.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="View\BrowserPages\ErrorView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="View\BrowserPages\GopherView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="View\DownloadManagerControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="View\QueryPrompt.xaml.cs">
@@ -24,7 +24,7 @@
     <Page Update="Theme.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="View\DownloadsWindow.xaml">
+    <Page Update="View\DownloadManagerControl.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="View\MainWindow.xaml">

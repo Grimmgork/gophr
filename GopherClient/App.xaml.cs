@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 
 using GopherClient.Model;
+using GopherClient.ViewModel;
 
 namespace GopherClient
 {
@@ -15,6 +16,9 @@ namespace GopherClient
 	/// </summary>
 	public partial class App : Application
 	{
-		
-	}
+		private void Application_Startup(object sender, StartupEventArgs e)
+		{
+			MainViewModel.SetArguments(e.Args);
+		}
+    }
 }

@@ -23,14 +23,14 @@ namespace GopherClient.Model
 			}
 		}
 
-		string _uri;
-		public string Url
+		GopherUrl _uri;
+		public GopherUrl Url
         {
             get
             {
 				return _uri;
             }
-			private set
+			internal set
             {
 				_uri = value;
             }
@@ -47,24 +47,19 @@ namespace GopherClient.Model
 		}
 
 
-		private char type = '.';
-		private bool _hasType = false;
+		private string type = "";
 		public bool HasType
         {
-            get
-            {
-				return _hasType;
-            }
-			private set
-            {
-				_hasType = value;
-            }
+			get
+			{
+				return type != string.Empty && type != null;
+			}
         }
 
 		
 		private Queue<byte[]> Chunks = new Queue<byte[]>();
 
-		public ResourceRequest(string url)
+		public ResourceRequest(GopherUrl url)
         {
 			this.Url = url;
         }
@@ -82,14 +77,12 @@ namespace GopherClient.Model
 			}, t);
 		}
 
-		public Task<char> AwaitType(CancellationToken t)
+		public Task<string> AwaitMimeType(CancellationToken t)
 		{
 			return Task.Run(() => {
 				while (!IsFinished)
-				{
-					if (HasType)
-						return type;
-					if (t.IsCancellationRequested)
+				{ 
+					if (t.IsCancellationRequested || HasType || IsFinished)
 						break;
 					Thread.Sleep(5);
 				}
@@ -102,10 +95,12 @@ namespace GopherClient.Model
 			return null;
 		}
 
-		internal void ReportType(char type)
+		internal void ReportMimeType(string type)
 		{
-			this.type = type;
-			HasType = true;
+            lock (type)
+            {
+				this.type = type;
+			}
 		}
 
 		internal void ReportChunk(byte[] chunk)
@@ -131,7 +126,7 @@ namespace GopherClient.Model
 
 			lock (Chunks)
 			{
-				return Chunks.Dequeue(); ;
+				return Chunks.Dequeue();
 			}
 		}
 	}
