@@ -48,30 +48,8 @@
             <TextBox Name="UrlTextbox" Text="{Binding Url}" FontFamily="Consolas" TextWrapping="NoWrap" AcceptsReturn="False" KeyDown="TextBox_KeyDown" LostFocus="TextBox_LostFocus" AcceptsTab="False" VerticalContentAlignment="Center" FontSize="14" BorderThickness="0"/>
         </DockPanel>
 
-        <StatusBar DockPanel.Dock="Bottom" Background="WhiteSmoke">
-            <Separator Background="LightGray"/>
-            <StatusBarItem FontFamily="{StaticResource SymbolFont}" FontSize="17" Width="25" VerticalContentAlignment="Center" HorizontalContentAlignment="Center">
-                <StatusBarItem.Style>
-                    <Style TargetType="StatusBarItem">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Status}" Value="done">
-                                <Setter Property="Content" Value="&#xeb7b;"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="fetching">
-                                <Setter Property="Content" Value="&#xef78;"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="parsing">
-                                <Setter Property="Content" Value="&#xed0f;"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="error">
-                                <Setter Property="Content" Value="&#xf149;"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StatusBarItem.Style>
-            </StatusBarItem>
-            <Separator Width="1" HorizontalAlignment="Left" Background="LightGray"/>
-            <StatusBarItem Width="50" HorizontalContentAlignment="Center">
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem HorizontalContentAlignment="Left" Width="80">
                 <StatusBarItem.Style>
                     <Style TargetType="StatusBarItem">
                         <Style.Triggers>
@@ -79,10 +57,10 @@
                                 <Setter Property="Content" Value="done!"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Status}" Value="fetching">
-                                <Setter Property="Content" Value="fetching"/>
+                                <Setter Property="Content" Value="fetching ..."/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Status}" Value="parsing">
-                                <Setter Property="Content" Value="parsing"/>
+                                <Setter Property="Content" Value="parsing ..."/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Status}" Value="error">
                                 <Setter Property="Content" Value="error!"/>
@@ -91,7 +69,6 @@
                     </Style>
                 </StatusBarItem.Style>
             </StatusBarItem>
-            <Separator Background="LightGray"/>
             <StatusBarItem Content="{Binding Info}"/>
             <StatusBarItem Content="{Binding FormatedDataSize}" HorizontalAlignment="Right"/>
         </StatusBar>

@@ -27,11 +27,8 @@ namespace GopherClient.ViewModel
 	{
 		private static MainViewModel mvm;
 		private static CancellationTokenSource cancelTokenSource;
-		private static string[] Args;
 
 		private Configuration config;
-
-		private DownloadManagerViewModel Downloads;
 
 		public ICommand BackCommand{
 			get
@@ -206,10 +203,10 @@ namespace GopherClient.ViewModel
 			Configuration.Save(config);
 
 			string starturl = config.startUrl;
-			if (Args.Length > 0)
-				starturl = Args[0];
+			if (App.args.Length > 0)
+				starturl = App.args[0];
 
-			Navigate("gopher://gopher.floodgap.com");
+			Navigate(starturl);
 		}
 
 		public void Navigate(string newLocation, bool writeToHistory = true)
@@ -239,25 +236,33 @@ namespace GopherClient.ViewModel
 				url.Query = p.Result;
 			}
 
-			CancellationToken t = NewPageCancelToken();
-			DisplayResource(ResourceRequestFactory.NewRequest(url, t), t);
+			CancellationToken t = NewRequestCancelTokenSource();
+			DisplayResource(ResourceRequestFactory.NewRequest(url), t);
 		}
 
 		public async void DisplayResource(ResourceRequest req, CancellationToken t)
 		{
 			Status = StatusState.fetching;
-
+			
+			BrowserPageBase browserPage = null;
+			req.StartRequest(t);
 			string mimetype = await req.AwaitMimeType(t);
-            switch (mimetype)
+			switch (mimetype)
             {
 				case "text/gopher":
-					PushHistory(req.Url.ToString());
-					NewPage(new GopherPageViewModel(), req, t);
-					break;
-				default:
-					DisplayFileExternal(req, t);
+					browserPage = new GopherPageViewModel();
 					break;
 			}
+
+			if(browserPage != null)
+            {
+				PushHistory(req.Url.ToString());
+				DataSize = 0;
+				Result = browserPage;
+				await browserPage.Consume(req, t);
+			}
+			else
+				await DisplayFileExternal(req, t);
 
 			Status = StatusState.done;
 		}
@@ -270,15 +275,7 @@ namespace GopherClient.ViewModel
 			OnPropertyChanged("Url");
 		}
 
-		public async void NewPage(BrowserPageBase consumer, ResourceRequest request, CancellationToken t)
-        {
-			DataSize = 0;
-			Result = consumer;
-			await consumer.Consume(request, t);
-			consumer.Dispose();
-		}
-
-		public CancellationToken NewPageCancelToken()
+		public CancellationToken NewRequestCancelTokenSource()
         {
 			if (cancelTokenSource != null)
 				cancelTokenSource.Cancel();
@@ -287,31 +284,35 @@ namespace GopherClient.ViewModel
 			return cancelTokenSource.Token;
 		}
 
-		public async void DisplayFileExternal(ResourceRequest req, CancellationToken t)
+		public Task DisplayFileExternal(ResourceRequest req, CancellationToken t)
 		{
-			string type = await req.AwaitMimeType(t);
+			return Task.Run(() => {
+				string type = req.AwaitMimeType(t).Result;
 
-            if (config.typeMappings.ContainsKey(type))
-            {
-				string file = await DownloadToTempFile(req);
-				RunOpenAppCommand(type, file);
-				return;
-            }
+				if (config.typeMappings.ContainsKey(type))
+				{
+					string file = PrepareTempFileDirectory(req.Url.Segments.Last());
+					DownloadToFile(file, req).Wait();
+					RunOpenAppCommand(type, file);
+					return;
+				}
 
-            if (config.trustedFileExtensions.Contains(req.Url.FileExtension))
-            {
-				string file = await DownloadToTempFile(req);
-				OpenUrl(file);
-				return;
-            }
+				if (config.trustedFileExtensions.Contains(req.Url.FileExtension))
+				{
+					string file = PrepareTempFileDirectory(req.Url.Segments.Last());
+					DownloadToFile(file, req).Wait();
+					OpenUrl(file);
+					return;
+				}
 
-			//download to file permanently
-			SaveFileDialog d = new SaveFileDialog();
-			d.ShowDialog();
-			if (d.FileName == "")
-				return;
+				//download to file permanently
+				SaveFileDialog d = new SaveFileDialog();
+				d.ShowDialog();
+				if (d.FileName == "")
+					return;
 
-			await DownloadToFile(d.FileName, req);
+				DownloadToFile(d.FileName, req).Wait();
+			});
 		}
 
 		public static void OpenUrl(string path)
@@ -336,15 +337,12 @@ namespace GopherClient.ViewModel
 			return new FileWriter(filePath).Consume(req, t);
 		}
 
-		public Task<string> DownloadToTempFile(ResourceRequest req)
+		public string PrepareTempFileDirectory(string fileName)
         {
-			return Task.Run<string>(() => {
-				string filePath = $"{Path.GetTempPath()}gophr\\{Guid.NewGuid()}\\{req.Url.Segments.Last()}";
-				Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-				DownloadToFile(filePath, req).Wait();
-				return filePath;
-			});
-        }
+			string filePath = $@"{Path.GetTempPath()}gophr\{Guid.NewGuid()}\{fileName}";
+			Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+			return filePath;
+		}
 
 		public static ICommand NavigateToUrlBehavior(string url){
 			return new RelayCommand(o => { mvm.Navigate(url); }, o => true);
@@ -352,10 +350,5 @@ namespace GopherClient.ViewModel
 		public static ICommand UpdateInfo(string text){
 			return new RelayCommand(o => { mvm.Info = text; }, o => true);
 		}
-
-		public static void SetArguments(string[] args)
-        {
-			Args = args;
-        }
 	}
 }

@@ -28,7 +28,7 @@
         <DataTemplate DataType="{x:Type rt:GopherElement}">
             <Border Name="back" Background="Black" MouseLeftButtonDown="GopherItemMouseDown" ToolTip="{Binding url, IsAsync=True, Mode=OneTime}" SnapsToDevicePixels="False">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Name="icon" Width="15" VerticalAlignment="Center" FontFamily="{StaticResource SymbolFont}" Height="15" Margin="15,0,5,0" Foreground="DarkSlateBlue"/>
+                    <TextBlock Name="icon" Width="15" VerticalAlignment="Center" FontFamily="{StaticResource SymbolFont}" Height="15" Margin="20,0,5,0" Foreground="DarkSlateBlue"/>
                     <TextBlock Name="text" Text="{Binding text, IsAsync=True, Mode=OneTime}" Foreground="White" FontSize="15"/>
                 </StackPanel>
                 <Border.ContextMenu>
@@ -101,7 +101,7 @@
 
     <DockPanel>
 
-        <ItemsControl Name="GopherElements" ItemsSource="{Binding Elements}" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.VerticalScrollBarVisibility="Visible">
+        <ItemsControl Name="GopherElements" ItemsSource="{Binding Elements, IsAsync=True}" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.VerticalScrollBarVisibility="Visible">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <VirtualizingStackPanel Name="GopherElementsVirtualizingStackpanel" IsVirtualizing="True"

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GopherClient.Model
 {
-    public interface IDataChunkConsumer : IDisposable
+    public interface IDataChunkConsumer 
     {
         public Task Consume(ResourceRequest request, CancellationToken t);
     }

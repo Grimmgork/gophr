@@ -14,7 +14,7 @@ namespace GopherClient.Model.Protocols
 	{
 		private bool waitForDots = false;
 
-		private Dictionary<char, string> MimeMapping = new Dictionary<char, string>() { 
+		private Dictionary<char, string> GopherMimeMapping = new Dictionary<char, string>() { 
 			{ '0', "text/plain" },
 			{ '1', "text/gopher" },
 			{ 'g', "image/gif" },
@@ -34,12 +34,12 @@ namespace GopherClient.Model.Protocols
 				waitForDots = false;
 
 				string mimeType = "";
-				if(MimeMapping.ContainsKey(Url.Type))
-					mimeType = MimeMapping[Url.Type];
+				if(GopherMimeMapping.ContainsKey(Url.Type))
+					mimeType = GopherMimeMapping[Url.Type];
 
 				ReportMimeType(mimeType);
 
-				const int buffersize = 1024;
+				const int buffersize = 2048;
 
 				TcpClient tcp = new TcpClient(Url.Host, Url.Port);
 				tcp.ReceiveBufferSize = buffersize;
@@ -56,9 +56,9 @@ namespace GopherClient.Model.Protocols
 					if (lengthOfChunk == 0)
                     {
 						timeout++;
-						if (timeout > 10)
+						if (timeout > 100)
 							break;
-						Thread.Sleep(10);
+						Thread.Sleep(5);
 						continue;
 					}
 					else

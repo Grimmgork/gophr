@@ -26,9 +26,9 @@ namespace GopherClient
 			{
 				startUrl = "gopher://gopher.floodgap.com",
 				trustetProtocols = new string[] { "https", "http", "gopher" },
-				trustedFileExtensions = new string[] { ".txt", ".jpg", ".png", ".gif" },
+				trustedFileExtensions = new string[] { ".txt", ".jpg", ".png", ".gif", ".html" },
 				typeMappings = new Dictionary<string, string>() { 
-					//{ "text/plain", @"c:\users\eric\projects\gophr\GopherClient\apps\chrome.cmd" }
+					{ "text/plain", @"c:\users\eric\projects\gophr\GopherClient\apps\text-plain.cmd" },
 				}
 			};
 		}

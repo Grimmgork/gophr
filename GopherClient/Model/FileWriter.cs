@@ -16,24 +16,6 @@ namespace GopherClient.Model
             fs = File.Create(filename);
         }
 
-        private void AddChunk(byte[] chunk, bool lastone)
-        {
-            if (lastone)
-            {
-                if(chunk != null)
-                    fs.Write(chunk);
-                fs.Close();
-                return;
-            }
-                
-            fs.Write(chunk);
-        }
-
-        public void Dispose()
-        {
-            fs.Close();
-        }
-
         public Task Consume(ResourceRequest request, CancellationToken t)
         {
             return Task.Run(() =>
@@ -43,13 +25,12 @@ namespace GopherClient.Model
                 {
                     chunk = request.AwaitNextChunk(t).Result;
                     if (chunk == null)
-                    {
-                        AddChunk(chunk, true);
                         break;
-                    }
-                    AddChunk(chunk, false);
+
+                    fs.Write(chunk);
                 }
-                Dispose();
+
+                fs.Close();
             });
         }
     }

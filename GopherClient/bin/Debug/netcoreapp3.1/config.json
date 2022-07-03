@@ -1,1 +1,1 @@
-{"startUrl":"gopher://gopher.floodgap.com","bookmarks":null,"trustetProtocols":["https","http","gopher"],"trustedFileExtensions":[".txt",".jpg",".png",".gif"],"typeMappings":{}}
+{"startUrl":"gopher://gopher.floodgap.com","bookmarks":null,"trustetProtocols":["https","http","gopher"],"trustedFileExtensions":[".txt",".jpg",".png",".gif",".html"],"typeMappings":{"text/plain":"c:\\users\\eric\\projects\\gophr\\GopherClient\\apps\\text-plain.cmd"}}

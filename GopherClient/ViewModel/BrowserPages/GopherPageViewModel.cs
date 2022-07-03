@@ -234,11 +234,6 @@ namespace GopherClient.ViewModel.BrowserPages
 			return supportedTypes.Contains(t);
         }
 
-        public override void Dispose()
-        {
-            
-        }
-
         public override async Task Consume(ResourceRequest request, CancellationToken t)
         {
 			while (!t.IsCancellationRequested)

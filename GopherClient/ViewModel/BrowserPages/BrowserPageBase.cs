@@ -30,10 +30,5 @@ namespace GopherClient.ViewModel.BrowserPages
         {
             throw new NotImplementedException();
         }
-
-        public virtual void Dispose()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

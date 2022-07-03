@@ -46,16 +46,8 @@ namespace GopherClient.Model
 			}
 		}
 
-
-		private string type = "";
-		public bool HasType
-        {
-			get
-			{
-				return type != string.Empty && type != null;
-			}
-        }
-
+		private string mimeType = "application/unknown";
+		private bool mimeTypeReported = false;
 		
 		private Queue<byte[]> Chunks = new Queue<byte[]>();
 
@@ -71,7 +63,7 @@ namespace GopherClient.Model
 					if (IsFinished && Chunks.Count == 0) return null;
 					if (t.IsCancellationRequested) break;
 					if (Chunks.Count > 0) return GetChunk();
-					Thread.Sleep(5);
+					//Thread.Sleep(5);
 				}
 				return null;
 			}, t);
@@ -82,24 +74,28 @@ namespace GopherClient.Model
 			return Task.Run(() => {
 				while (!IsFinished)
 				{ 
-					if (t.IsCancellationRequested || HasType || IsFinished)
+					if (t.IsCancellationRequested || mimeTypeReported || IsFinished)
 						break;
 					Thread.Sleep(5);
 				}
-				return type;
+				return mimeType;
 			});
 		}
 
 		internal virtual Task StartRequest(CancellationToken t) 
 		{
-			return null;
+			throw new NotImplementedException();
 		}
 
 		internal void ReportMimeType(string type)
 		{
+			mimeTypeReported = true;
+			if (type == "")
+				return;
+
             lock (type)
             {
-				this.type = type;
+				this.mimeType = type;
 			}
 		}
 
@@ -117,6 +113,7 @@ namespace GopherClient.Model
 		internal void ReportEnd()
         {
 			IsFinished = true;
+			mimeTypeReported = true;
         }
 
 		private byte[] GetChunk()

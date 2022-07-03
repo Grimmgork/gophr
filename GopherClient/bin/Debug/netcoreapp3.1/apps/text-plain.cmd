@@ -1,0 +1,1 @@
+start vim %1
